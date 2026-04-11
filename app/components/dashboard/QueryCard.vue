@@ -30,11 +30,11 @@
     <div class="metrics-grid">
       <div class="metric-box">
         <span class="metric-value">{{ query.new_items_count ?? 0 }}</span>
-        <span class="metric-label">New Items</span>
+        <span class="metric-label">New (24h)</span>
       </div>
       <div class="metric-box">
         <span class="metric-value">{{ query.price_drops_count ?? 0 }}</span>
-        <span class="metric-label">Price Drops</span>
+        <span class="metric-label">Drops (24h)</span>
       </div>
     </div>
 
@@ -135,12 +135,14 @@ const timeAgo = computed(() => {
   box-shadow: var(--shadow-sm);
   position: relative;
   overflow: hidden;
+  text-decoration: none;
 }
 
 .query-card:hover {
   border-color: var(--color-accent);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md), var(--shadow-glow);
+  text-decoration: none;
 }
 
 .card-paused {

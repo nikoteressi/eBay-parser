@@ -34,7 +34,7 @@
             <span class="count-badge success">{{ items.priceDrops.length }}</span>
           </div>
           <div class="items-grid">
-            <ItemCard v-for="item in items.priceDrops" :key="item.id" :item="item" />
+            <ItemCard v-for="item in items.priceDrops" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" />
           </div>
         </section>
 
@@ -48,7 +48,7 @@
             <span class="count-badge" :class="items.newItems.length > 0 ? 'accent' : ''">{{ items.newItems.length }}</span>
           </div>
           <div v-if="items.newItems.length > 0" class="items-grid">
-            <ItemCard v-for="item in items.newItems" :key="item.id" :item="item" />
+            <ItemCard v-for="item in items.newItems" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" />
           </div>
           <div v-else class="empty-section">
             <p>No new items found in the last 24 hours.</p>
@@ -65,7 +65,7 @@
             <span class="count-badge">{{ items.endedItems.length }}</span>
           </div>
           <div class="items-grid">
-            <ItemCard v-for="item in items.endedItems" :key="item.id" :item="item" />
+            <ItemCard v-for="item in items.endedItems" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" />
           </div>
         </section>
       </div>
@@ -98,6 +98,7 @@ const { queries, fetchQueries, updateQuery, deleteQuery } = useQueries()
 const loadingQuery = ref(true)
 const loadingItems = ref(true)
 const isPolling = ref(false)
+const lastViewedAt = ref<number>(0)
 const deleteDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 
 interface EbayItem {
@@ -111,6 +112,8 @@ interface EbayItem {
   first_seen_total_cost: number
   current_shipping: number
   currency: string
+  first_seen_at: string
+  last_seen_at: string
 }
 
 const items = ref<{
@@ -128,12 +131,19 @@ const currentQuery = computed(() => {
 })
 
 onMounted(async () => {
+  // 1. Get previous view time from localStorage
+  const stored = localStorage.getItem(`query_view_${route.params.id}`)
+  lastViewedAt.value = stored ? parseInt(stored) : 0
+
   if (queries.value.length === 0) {
     await fetchQueries()
   }
   loadingQuery.value = false
   
   await fetchItems()
+
+  // 2. Update view time for NEXT visit
+  localStorage.setItem(`query_view_${route.params.id}`, Date.now().toString())
 })
 
 const fetchItems = async () => {

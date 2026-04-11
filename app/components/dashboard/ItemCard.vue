@@ -9,6 +9,10 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
         <span>{{ priceDiffPercent }}%</span>
       </div>
+
+      <div v-if="activityBadge" class="activity-alert-badge" :class="activityBadge.type">
+        {{ activityBadge.icon }} {{ activityBadge.label }} <small>{{ activityBadge.timeAgo }}</small>
+      </div>
     </div>
 
     <div class="item-details">
@@ -46,7 +50,8 @@
 import { computed } from 'vue'
 
 const props = defineProps<{
-  item: any
+  item: any,
+  lastViewedAt?: number
 }>()
 
 const isPriceDrop = computed(() => {
@@ -58,6 +63,48 @@ const priceDiffPercent = computed(() => {
   const diff = props.item.first_seen_total_cost - props.item.current_total_cost
   return Math.round((diff / props.item.first_seen_total_cost) * 100)
 })
+
+const activityBadge = computed(() => {
+  const now = Date.now()
+  const twoHoursMs = 2 * 60 * 60 * 1000
+  const lastViewed = props.lastViewedAt || 0
+  
+  const firstSeen = new Date(props.item.first_seen_at).getTime()
+  const lastSeen = new Date(props.item.last_seen_at).getTime()
+  
+  // 1. Just Found (priority)
+  // Must be newer than lastViewed and within 2h
+  if (firstSeen > lastViewed && (now - firstSeen < twoHoursMs)) {
+    return {
+      type: 'new',
+      icon: '🔥',
+      label: 'Just Found',
+      timeAgo: formatTimeAgo(firstSeen)
+    }
+  }
+  
+  // 2. Just Dropped
+  // Must be newer than lastViewed (meaning drop happened since last visit) and within 2h
+  if (isPriceDrop.value && lastSeen > lastViewed && (now - lastSeen < twoHoursMs)) {
+    return {
+      type: 'drop',
+      icon: '📉',
+      label: 'Just Dropped',
+      timeAgo: formatTimeAgo(lastSeen)
+    }
+  }
+  
+  return null
+})
+
+const formatTimeAgo = (timestamp: number) => {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000)
+  if (seconds < 60) return `${seconds}s ago`
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+  const hours = Math.floor(minutes / 60)
+  return `${hours}h ago`
+}
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -130,6 +177,48 @@ const formatBuyingOption = (option: string) => {
   align-items: center;
   gap: var(--space-1);
   box-shadow: var(--shadow-sm);
+}
+
+.activity-alert-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  color: white;
+  padding: var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-bold);
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 2;
+  animation: slideUp 0.3s ease-out;
+}
+
+.activity-alert-badge.new {
+  background: linear-gradient(to right, rgba(255, 87, 34, 0.9), rgba(255, 152, 0, 0.9));
+  color: white;
+}
+
+.activity-alert-badge.drop {
+  background: linear-gradient(to right, rgba(76, 175, 80, 0.9), rgba(139, 195, 74, 0.9));
+  color: white;
+}
+
+.activity-alert-badge small {
+  font-weight: var(--weight-normal);
+  opacity: 0.9;
+  margin-left: auto;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 .item-details {

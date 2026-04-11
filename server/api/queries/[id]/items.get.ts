@@ -56,6 +56,8 @@ function formatItem(item: any) {
     first_seen_total_cost: item.firstSeenTotalCost,
     current_total_cost: item.currentTotalCost,
     currency: item.currency,
+    first_seen_at: item.firstSeenAt,
+    last_seen_at: item.lastSeenAt,
     ended_at: item.endedAt
   };
 }

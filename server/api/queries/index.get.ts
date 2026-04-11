@@ -21,12 +21,14 @@ export default defineEventHandler(async () => {
     // Count active price drops (current < first)
     // Note: Drizzle SQLite doesn't support complex comparisons directly in where as easily for all types 
     // but this works for basic numeric types in SQLite.
+    // Count active price drops (current < first) within last 24h
     const priceDropsCount = db.select()
       .from(trackedItems)
       .where(and(
         eq(trackedItems.queryId, q.id),
         eq(trackedItems.itemStatus, 'active'),
-        lt(trackedItems.currentTotalCost, trackedItems.firstSeenTotalCost)
+        lt(trackedItems.currentTotalCost, trackedItems.firstSeenTotalCost),
+        gte(trackedItems.lastSeenAt, oneDayAgo)
       ))
       .all().length;
 
