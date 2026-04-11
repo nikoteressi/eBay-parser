@@ -19,20 +19,34 @@
       <h4 class="item-title" :title="item.title">{{ item.title }}</h4>
       
       <div class="price-section">
-        <div class="current-price">
-          <span class="price-amount">{{ formatCurrency(item.current_total_cost) }}</span>
-          <span class="price-label">Total</span>
-        </div>
-        
-        <div v-if="isPriceDrop" class="original-price">
-          <span class="original-amount">{{ formatCurrency(item.first_seen_total_cost) }}</span>
+        <div class="price-breakdown">
+          <div class="price-row">
+            <span class="price-row-label">Item Price</span>
+            <span class="price-row-value">{{ formatCurrency(item.current_price) }}</span>
+          </div>
+          <div class="price-row">
+            <span class="price-row-label">Shipping</span>
+            <span class="price-row-value" :class="{ 'free-shipping-text': item.current_shipping === 0 }">
+              {{ item.current_shipping === 0 ? 'FREE' : `+ ${formatCurrency(item.current_shipping)}` }}
+            </span>
+          </div>
+          <div class="price-total-row">
+            <div class="total-info">
+              <span class="total-label">Total Cost</span>
+              <div v-if="isPriceDrop" class="original-price-tag">
+                <span class="original-amount">{{ formatCurrency(item.first_seen_total_cost) }}</span>
+              </div>
+            </div>
+            <span class="total-amount">{{ formatCurrency(item.current_total_cost) }}</span>
+          </div>
         </div>
       </div>
 
       <div class="item-meta">
         <span class="buying-option">{{ formatBuyingOption(item.buying_option) }}</span>
-        <span class="shipping-info" :class="{ 'free-shipping': item.current_shipping === 0 }">
-          {{ item.current_shipping === 0 ? 'Free Shipping' : `+ ${formatCurrency(item.current_shipping)} shipping` }}
+        <span v-if="item.accepts_offers" class="offers-badge">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2a2 2 0 0 0-2 2v5H4a2 2 0 0 0-2 2v2c0 1.1.9 2 2 2h5v5c0 1.1.9 2 2 2h2c1.1 0 2-.9 2-2v-5h5a2 2 0 0 0 2-2v-2a2 2 0 0 0-2-2h-5V4a2 2 0 0 0-2-2h-2z"></path></svg>
+          Offers Accepted
         </span>
       </div>
 
@@ -244,29 +258,69 @@ const formatBuyingOption = (option: string) => {
 
 .price-section {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-2);
+  flex-direction: column;
+  gap: var(--space-3);
+  background: var(--color-bg-primary);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-subtle);
 }
 
-.current-price {
+.price-breakdown {
   display: flex;
   flex-direction: column;
+  gap: var(--space-1);
 }
 
-.price-amount {
-  font-size: var(--text-lg);
-  font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
-}
-
-.price-label {
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: var(--text-xs);
   color: var(--color-text-tertiary);
-  text-transform: uppercase;
-  margin-top: -2px;
 }
 
-.original-price {
+.price-row-value {
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-medium);
+}
+
+.free-shipping-text {
+  color: var(--color-success-text);
+  font-weight: var(--weight-bold);
+}
+
+.price-total-row {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.total-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.total-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.total-amount {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-accent);
+  line-height: 1;
+}
+
+.original-price-tag {
   text-decoration: line-through;
   color: var(--color-text-tertiary);
   font-size: var(--text-xs);
@@ -283,6 +337,19 @@ const formatBuyingOption = (option: string) => {
   font-weight: var(--weight-semibold);
   color: var(--color-accent);
   text-transform: uppercase;
+}
+
+.offers-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  color: var(--color-success-text);
+  background: var(--color-success-subtle);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  width: fit-content;
 }
 
 .shipping-info {

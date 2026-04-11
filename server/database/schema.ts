@@ -60,6 +60,7 @@ export const trackedItems = sqliteTable('tracked_items', {
   lastSeenAt: text('last_seen_at').notNull(),
   outOfViewSince: text('out_of_view_since'),           // Grace period start (nullable)
   endedAt: text('ended_at'),                           // Hard status change (nullable)
+  acceptsOffers: integer('accepts_offers', { mode: 'boolean' }).notNull().default(false),
   notifiedNew: integer('notified_new', { mode: 'boolean' }).notNull().default(false),
   lastNotifiedPrice: real('last_notified_price'),      // Total cost at last price-drop alert
 }, (table) => [

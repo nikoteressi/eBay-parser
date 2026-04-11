@@ -30,6 +30,7 @@ export interface NewItemRecord {
   itemUrl: string;
   imageUrl: string | null;
   buyingOption: 'FIXED_PRICE' | 'AUCTION' | 'AUCTION_BIN';
+  acceptsOffers: boolean;
   price: number;
   shippingCost: number;
   totalCost: number;
@@ -142,6 +143,7 @@ export function runDiff(queryId: string, apiItems: NormalizedEbayItem[]): DiffRe
           currentTotalCost: totalCost,
           currency: apiItem.currency,
           itemStatus: 'active',
+          acceptsOffers: apiItem.acceptsOffers,
           firstSeenAt: now,
           lastSeenAt: now,
           notifiedNew: false,
@@ -167,6 +169,7 @@ export function runDiff(queryId: string, apiItems: NormalizedEbayItem[]): DiffRe
             currentTotalCost: totalCost,
             currency: apiItem.currency,
             itemStatus: 'active' as const,
+            acceptsOffers: apiItem.acceptsOffers,
             firstSeenAt: now,
             lastSeenAt: now,
             outOfViewSince: null,
@@ -184,6 +187,7 @@ export function runDiff(queryId: string, apiItems: NormalizedEbayItem[]): DiffRe
         itemUrl: apiItem.itemUrl,
         imageUrl: apiItem.imageUrl,
         buyingOption: apiItem.buyingOption,
+        acceptsOffers: apiItem.acceptsOffers,
         price: apiItem.price,
         shippingCost: apiItem.shippingCost,
         totalCost,
@@ -201,6 +205,7 @@ export function runDiff(queryId: string, apiItems: NormalizedEbayItem[]): DiffRe
         title: apiItem.title,
         itemUrl: apiItem.itemUrl,
         imageUrl: apiItem.imageUrl,
+        acceptsOffers: apiItem.acceptsOffers,
       };
 
       // If was out_of_view → reactivate

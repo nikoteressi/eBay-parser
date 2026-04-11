@@ -58,6 +58,7 @@ function formatItem(item: any) {
     currency: item.currency,
     first_seen_at: item.firstSeenAt,
     last_seen_at: item.lastSeenAt,
-    ended_at: item.endedAt
+    ended_at: item.endedAt,
+    accepts_offers: item.acceptsOffers
   };
 }

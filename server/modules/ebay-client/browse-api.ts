@@ -52,6 +52,7 @@ export interface NormalizedEbayItem {
   shippingCost: number;
   currency: string;
   buyingOption: 'FIXED_PRICE' | 'AUCTION' | 'AUCTION_BIN';
+  acceptsOffers: boolean;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -208,6 +209,7 @@ function normalizeItem(raw: BrowseApiItemSummary): NormalizedEbayItem {
     shippingCost,
     currency,
     buyingOption,
+    acceptsOffers: options.includes('BEST_OFFER'),
   };
 }
 
