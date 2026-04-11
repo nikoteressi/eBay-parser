@@ -36,47 +36,28 @@ import EbayApiForm from '~/components/settings/EbayApiForm.vue'
 import SmtpForm from '~/components/settings/SmtpForm.vue'
 import TelegramForm from '~/components/settings/TelegramForm.vue'
 import DefaultsForm from '~/components/settings/DefaultsForm.vue'
+import { useSettings } from '~/composables/useSettings'
 
 definePageMeta({
   layout: 'default'
 })
 
-const loading = ref(true)
-const settings = ref<Record<string, any>>({})
+const { settings, loading, fetchSettings, saveSettings } = useSettings()
 const showToast = ref(false)
 let toastTimeout: any
-
-const fetchSettings = async () => {
-  loading.value = true
-  try {
-    const data = await $fetch('/api/settings')
-    settings.value = data as Record<string, any>
-  } catch (error) {
-    console.error('Failed to load settings', error)
-  } finally {
-    loading.value = false
-  }
-}
 
 onMounted(() => {
   fetchSettings()
 })
 
 const handleSave = async (updates: Record<string, string>) => {
-  try {
-    await $fetch('/api/settings', {
-      method: 'PUT',
-      body: updates
-    })
-    settings.value = { ...settings.value, ...updates }
-    
+  const success = await saveSettings(updates)
+  if (success) {
     clearTimeout(toastTimeout)
     showToast.value = true
     toastTimeout = setTimeout(() => {
       showToast.value = false
     }, 3000)
-  } catch (error) {
-    console.error('Failed to save settings', error)
   }
 }
 </script>

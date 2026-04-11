@@ -3,6 +3,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
+  runtimeConfig: {
+    // Server-only (process.env.ADMIN_TOKEN)
+    adminToken: process.env.ADMIN_TOKEN ?? '',
+    public: {
+      // Client-side — set via NUXT_PUBLIC_ADMIN_TOKEN env var
+      adminToken: process.env.NUXT_PUBLIC_ADMIN_TOKEN ?? '',
+    },
+  },
+
   css: ['~/assets/css/global.css'],
 
   app: {

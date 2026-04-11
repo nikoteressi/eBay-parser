@@ -21,7 +21,11 @@
                 <div class="item-details">
                   <a :href="item.item_url" target="_blank" class="item-title truncate" :title="item.title">{{ item.title }}</a>
                   <div class="item-meta">
-                    <span class="item-price">{{ formatPrice(item.current_total_cost, item.currency) }}</span>
+                    <span class="item-price">
+                      {{ formatPrice(item.current_total_cost, item.currency) }}
+                      <span v-if="item.current_shipping > 0" class="shipping-tag">+ {{ formatPrice(item.current_shipping, item.currency) }} ship</span>
+                      <span v-else class="shipping-tag free-ship">Free ship</span>
+                    </span>
                     <span class="item-type">{{ item.buying_option === 'FIXED_PRICE' ? 'BIN' : 'Auction' }}</span>
                   </div>
                 </div>
@@ -41,6 +45,7 @@
                     <span class="old-price">{{ formatPrice(item.first_seen_total_cost, item.currency) }}</span>
                     <span class="arrow">→</span>
                     <span class="new-price">{{ formatPrice(item.current_total_cost, item.currency) }}</span>
+                    <span v-if="item.current_shipping > 0" class="shipping-tag">+ {{ formatPrice(item.current_shipping, item.currency) }} ship</span>
                   </div>
                 </div>
               </li>
@@ -69,6 +74,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { authFetch } from '~/composables/useAuthFetch'
 
 const props = defineProps<{
   queryId: string
@@ -84,7 +90,7 @@ const endedItems = ref<any[]>([])
 
 onMounted(async () => {
   try {
-    const data = await $fetch(`/api/queries/${props.queryId}/items`) as any
+    const data = await authFetch(`/api/queries/${props.queryId}/items`) as any
     // data.newItems, data.priceDrops, data.endedItems
     newItems.value = data.newItems || []
     priceDrops.value = data.priceDrops || []
@@ -252,5 +258,16 @@ const formatDate = (isoString: string) => {
 .ended-card {
   opacity: 0.7;
   padding: var(--space-2) var(--space-3);
+}
+
+.shipping-tag {
+  font-size: 0.65rem;
+  color: var(--color-text-tertiary);
+  font-weight: var(--weight-regular);
+  margin-left: var(--space-1);
+}
+
+.free-ship {
+  color: var(--color-success-text);
 }
 </style>

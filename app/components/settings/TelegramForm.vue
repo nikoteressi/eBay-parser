@@ -47,6 +47,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { authFetch } from '~/composables/useAuthFetch'
 
 const props = defineProps<{
   settings: Record<string, any>
@@ -84,7 +85,7 @@ const testConnection = async () => {
   testing.value = true
   testResult.value = null
   try {
-    await $fetch('/api/settings/test-telegram', { method: 'POST' })
+    await authFetch('/api/settings/test-telegram', { method: 'POST' })
     testResult.value = { success: true }
   } catch (error) {
     testResult.value = { success: false, error: error instanceof Error ? error.message : 'Connection failed' }

@@ -7,7 +7,14 @@ import { decrypt, isEncrypted } from '../../utils/encryption';
 function readSetting(key: string): string | undefined {
   const row = db.select().from(settings).where(eq(settings.key, key)).get();
   if (!row) return undefined;
-  if (row.isSecret && isEncrypted(row.value)) return decrypt(row.value);
+  if (row.isSecret && isEncrypted(row.value)) {
+    try {
+      return decrypt(row.value);
+    } catch {
+      console.error(`[readSetting] Failed to decrypt "${key}" — re-save this setting`);
+      return undefined;
+    }
+  }
   return row.value;
 }
 

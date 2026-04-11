@@ -1,4 +1,4 @@
-FROM node:23-slim AS builder
+FROM node:25-slim AS builder
 
 WORKDIR /app
 
@@ -11,7 +11,7 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-FROM node:23-slim
+FROM node:25-slim
 WORKDIR /app
 
 ENV NODE_ENV=production

@@ -40,4 +40,31 @@ describe('URL Translator', () => {
     const result = translateUrl('https://www.ebay.com/sch/i.html?_nkw=test&_udhi=100');
     expect(result.apiParams.filter).toContain('price:[..100],priceCurrency:USD');
   });
+
+  describe('Location Filtering (LH_PrefLoc)', () => {
+    it('maps LH_PrefLoc=1 to US Only', () => {
+      const result = translateUrl('https://www.ebay.com/sch/i.html?_nkw=lego&LH_PrefLoc=1');
+      expect(result.apiParams.filter).toContain('itemLocationCountry:US');
+      expect(result.summary.locationLabel).toBe('US Only');
+    });
+
+    it('maps LH_PrefLoc=3 to North America', () => {
+      const result = translateUrl('https://www.ebay.com/sch/i.html?_nkw=lego&LH_PrefLoc=3');
+      expect(result.apiParams.filter).toContain('itemLocationCountry:US|CA|MX');
+      expect(result.summary.locationLabel).toBe('North America');
+    });
+
+    it('handles LH_PrefLoc=2 as Worldwide without API filter', () => {
+      const result = translateUrl('https://www.ebay.com/sch/i.html?_nkw=lego&LH_PrefLoc=2');
+      // Should NOT contain itemLocationCountry filter
+      expect(result.apiParams.filter.some(f => f.startsWith('itemLocationCountry:'))).toBe(false);
+      expect(result.summary.locationLabel).toBe('Worldwide');
+    });
+
+    it('ignores unknown LH_PrefLoc values', () => {
+      const result = translateUrl('https://www.ebay.com/sch/i.html?_nkw=lego&LH_PrefLoc=99');
+      expect(result.apiParams.filter.some(f => f.startsWith('itemLocationCountry:'))).toBe(false);
+      expect(result.summary.locationLabel).toBeUndefined();
+    });
+  });
 });

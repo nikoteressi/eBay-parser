@@ -6,9 +6,10 @@
 //
 // Format: "enc:<base64(iv:authTag:ciphertext)>"
 //
-// Key derivation: SHA-256 hash of ENCRYPTION_KEY env var
-// produces a deterministic 32-byte key. This avoids requiring
-// users to provide exactly 32 hex/bytes — any passphrase works.
+// Key derivation: PBKDF2 (100,000 iterations, SHA-256)
+// produces a deterministic 32-byte key from any passphrase.
+// The static salt prevents rainbow tables; the high iteration
+// count prevents GPU brute-force attacks.
 //
 // See ARCHITECTURE.md §8 (Security Model).
 // ─────────────────────────────────────────────────────────────
@@ -17,7 +18,7 @@ import {
   createCipheriv,
   createDecipheriv,
   randomBytes,
-  createHash,
+  pbkdf2Sync,
 } from 'node:crypto';
 import { createLogger } from './logger';
 
@@ -31,6 +32,9 @@ const ALGORITHM = 'aes-256-gcm' as const;
 const IV_LENGTH = 12; // 96 bits — recommended for GCM
 const AUTH_TAG_LENGTH = 16; // 128 bits
 const ENC_PREFIX = 'enc:';
+const KDF_SALT = 'ebay-tracker-kdf-salt-v1';
+const KDF_ITERATIONS = 100_000;
+const KEY_LENGTH = 32;
 
 // ─────────────────────────────────────────────────────────────
 // Key Derivation
@@ -39,8 +43,9 @@ const ENC_PREFIX = 'enc:';
 /**
  * Derives a 32-byte encryption key from the ENCRYPTION_KEY env var.
  *
- * Uses SHA-256 so any passphrase length is accepted. The result
- * is cached in module scope (singleton — derived once per process).
+ * Uses PBKDF2 with 100,000 iterations and a static application-
+ * specific salt. The result is cached in module scope (singleton —
+ * derived once per process).
  *
  * @throws {Error} if ENCRYPTION_KEY is not set.
  */
@@ -55,7 +60,8 @@ function deriveKey(): Buffer {
     );
   }
 
-  return createHash('sha256').update(envKey).digest();
+  // Secure PBKDF2 derivation instead of plain SHA-256
+  return pbkdf2Sync(envKey, KDF_SALT, KDF_ITERATIONS, KEY_LENGTH, 'sha256');
 }
 
 /** Lazily cached derived key */
@@ -167,25 +173,15 @@ export function isEncrypted(value: string): boolean {
 /**
  * Masks a secret value for safe display in API responses.
  *
- * Returns `"••••••••XXXX"` where XXXX are the last 4 characters
- * of the *decrypted* value. If decryption fails or the value
- * is too short, returns `"••••••••"`.
+ * Returns a fixed `"••••••••"` string. No characters of the
+ * real secret are ever exposed to the SPA.
  *
- * @param encryptedValue — The `enc:`-prefixed encrypted value.
+ * @param _encryptedValue — The `enc:`-prefixed encrypted value (unused).
  * @returns Masked string safe for frontend display.
  */
-export function maskSecret(encryptedValue: string): string {
-  const MASK = '••••••••';
-
-  try {
-    const plain = decrypt(encryptedValue);
-    if (plain.length <= 4) {
-      return MASK;
-    }
-    return MASK + plain.slice(-4);
-  } catch {
-    return MASK;
-  }
+export function maskSecret(_encryptedValue: string): string {
+  // Do not expose the last 4 characters to the SPA under any circumstance
+  return '••••••••';
 }
 
 /**

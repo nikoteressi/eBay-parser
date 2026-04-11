@@ -37,6 +37,12 @@
     </td>
     <td class="actions-cell" @click.stop>
       <div class="row-actions">
+        <button class="btn btn-icon btn-ghost btn-sm" @click="forcePoll" title="Force Poll Now" :disabled="isPolling">
+          <svg :class="{'spin': isPolling}" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"></path>
+            <path d="M21 3v5h-5"></path>
+          </svg>
+        </button>
         <button class="btn btn-icon btn-ghost btn-sm" @click="togglePause" :title="query.status === 'paused' ? 'Resume' : 'Pause'">
           <svg v-if="query.status === 'paused'" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           <svg v-else xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -50,8 +56,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import StatusChip from './StatusChip.vue'
+import { authFetch } from '~/composables/useAuthFetch'
+
+const isPolling = ref(false)
 
 const props = defineProps<{
   query: any
@@ -70,6 +79,18 @@ const localTrackPrices = ref(props.query.track_prices)
 const isExpanded = computed(() => props.expanded)
 
 const toggleExpand = () => emit('toggleExpand', props.query.id)
+
+const forcePoll = async () => {
+  if (isPolling.value) return
+  isPolling.value = true
+  try {
+    await authFetch(`/api/queries/${props.query.id}/poll`, { method: 'POST' })
+  } catch (err) {
+    console.error('Manual poll failed', err)
+  } finally {
+    isPolling.value = false
+  }
+}
 
 const updateInterval = () => {
   emit('update', props.query.id, { polling_interval: localInterval.value })
@@ -99,14 +120,47 @@ const summaryText = computed(() => {
   return text || 'All items'
 })
 
+// Reactive clock tick for relative time display
+const now = ref(Date.now())
+let tickTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  tickTimer = setInterval(() => { now.value = Date.now() }, 30_000)
+})
+onUnmounted(() => {
+  if (tickTimer) clearInterval(tickTimer)
+})
+
 const timeAgo = computed(() => {
-  if (!props.query.last_polled_at) return 'Never'
-  // simple mock string for now
-  return '2m ago'
+  const polledAt = props.query.last_polled_at || props.query.lastPolledAt
+  if (!polledAt) return 'Never'
+
+  const diffMs = now.value - new Date(polledAt).getTime()
+  if (diffMs < 0) return 'Just now'
+
+  const seconds = Math.floor(diffMs / 1000)
+  if (seconds < 60) return `${seconds}s ago`
+
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `${minutes}m ago`
+
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}h ago`
+
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
 })
 </script>
 
 <style scoped>
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
 .query-row {
   cursor: pointer;
   transition: background var(--transition-fast);

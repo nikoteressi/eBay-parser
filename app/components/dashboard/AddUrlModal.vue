@@ -84,6 +84,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { authFetch } from '~/composables/useAuthFetch'
 
 const emit = defineEmits<{
   (e: 'submit', data: any): void
@@ -122,7 +123,7 @@ const handleUrlInput = () => {
       return
     }
     try {
-      const data = await $fetch('/api/queries/parse-url', {
+      const data = await authFetch('/api/queries/parse-url', {
         method: 'POST',
         body: { raw_url: form.raw_url }
       }) as any

@@ -50,5 +50,19 @@ export const MARKETPLACE_CURRENCY: ReadonlyMap<string, string> = new Map([
   ['EBAY_CA', 'CAD'],
 ]);
 
+/**
+ * eBay location filter `LH_PrefLoc` → Browse API `itemLocationCountry` field.
+ *
+ * LH_PrefLoc Codes:
+ * 1: US Only
+ * 2: Worldwide (ignored by filter, handled as summary label)
+ * 3: North America
+ */
+export const LOCATION_MAP: ReadonlyMap<string, { apiFilter?: string; label: string }> = new Map([
+  ['1', { apiFilter: 'itemLocationCountry:US', label: 'US Only' }],
+  ['2', { label: 'Worldwide' }],
+  ['3', { apiFilter: 'itemLocationCountry:US|CA|MX', label: 'North America' }],
+]);
+
 /** Default number of items per page when calling the Browse API. */
 export const DEFAULT_LIMIT = 50;

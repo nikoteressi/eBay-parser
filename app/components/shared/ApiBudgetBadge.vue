@@ -13,24 +13,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
+import { useApiBudget } from '~/composables/useApiBudget'
 
-const callsMade = ref(0)
-const dailyLimit = ref(5000)
-const loading = ref(true)
-
-// Fetch real data from API later (mocking for now to show UI)
-const fetchBudget = async () => {
-  try {
-    const data = await $fetch('/api/usage') as { callsMade: number, dailyLimit: number, status: string }
-    callsMade.value = data.callsMade
-    dailyLimit.value = data.dailyLimit
-  } catch (error) {
-    console.error('Failed to fetch API budget:', error)
-  } finally {
-    loading.value = false
-  }
-}
+const { callsMade, dailyLimit, loading, fetchBudget } = useApiBudget()
 
 onMounted(() => {
   fetchBudget()

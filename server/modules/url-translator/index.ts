@@ -10,6 +10,7 @@ import {
   DOMAIN_TO_MARKETPLACE,
   MARKETPLACE_CURRENCY,
   DEFAULT_LIMIT,
+  LOCATION_MAP,
 } from './param-map';
 
 // ─────────────────────────────────────────────────────────────
@@ -40,6 +41,8 @@ export interface TranslateSummary {
   sortLabel: string;
   /** Auto-detected marketplace from domain */
   detectedMarketplace?: string;
+  /** Human-readable location description (US Only, North America, etc.) */
+  locationLabel?: string;
 }
 
 export interface TranslateResult {
@@ -154,6 +157,15 @@ export function translateUrl(rawUrl: string): TranslateResult {
     filters.push('buyingOptions:{FIXED_PRICE}');
   }
 
+  // Location (LH_PrefLoc)
+  const prefLoc = params.get('LH_PrefLoc');
+  const locationMapping = prefLoc ? LOCATION_MAP.get(prefLoc) : undefined;
+  if (locationMapping) {
+    if (locationMapping.apiFilter) {
+      filters.push(locationMapping.apiFilter);
+    }
+  }
+
   // ── Sort ──
   const sopCode = params.get('_sop');
   const sortMapping = sopCode ? SORT_MAP.get(sopCode) : undefined;
@@ -175,6 +187,7 @@ export function translateUrl(rawUrl: string): TranslateResult {
     detectedMarketplace,
     ...(minPrice !== undefined && { minPrice }),
     ...(maxPrice !== undefined && { maxPrice }),
+    ...(locationMapping?.label && { locationLabel: locationMapping.label }),
   };
 
   return { apiParams, summary };

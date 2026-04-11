@@ -54,7 +54,12 @@ function readSetting(key: string): string | undefined {
   if (!row) return undefined;
 
   if (row.isSecret && isEncrypted(row.value)) {
-    return decrypt(row.value);
+    try {
+      return decrypt(row.value);
+    } catch {
+      log.error(`Failed to decrypt "${key}" — re-save this setting via the UI`);
+      return undefined;
+    }
   }
   return row.value;
 }
