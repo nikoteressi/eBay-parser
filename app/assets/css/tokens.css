@@ -7,12 +7,12 @@
   /* ── Color Palette ──────────────────────────────────────────── */
 
   /* Neutrals (dark mode base) */
-  --color-bg-primary:      hsl(225, 16%, 8%);
-  --color-bg-secondary:    hsl(225, 14%, 11%);
-  --color-bg-elevated:     hsl(225, 13%, 14%);
-  --color-bg-surface:      hsl(225, 12%, 17%);
-  --color-bg-hover:        hsl(225, 11%, 20%);
-  --color-bg-active:       hsl(225, 10%, 24%);
+  --color-bg-primary:      hsl(225, 16%, 6%);
+  --color-bg-secondary:    hsl(225, 14%, 9%);
+  --color-bg-elevated:     hsl(225, 13%, 12%);
+  --color-bg-surface:      hsl(225, 12%, 15%);
+  --color-bg-hover:        hsl(225, 11%, 18%);
+  --color-bg-active:       hsl(225, 10%, 22%);
 
   /* Borders */
   --color-border-subtle:   hsl(225, 10%, 20%);
@@ -87,11 +87,11 @@
   --radius-full: 9999px;
 
   /* ── Shadows ────────────────────────────────────────────────── */
-  --shadow-sm:    0 1px 2px hsla(0, 0%, 0%, 0.3);
-  --shadow-md:    0 4px 6px -1px hsla(0, 0%, 0%, 0.3), 0 2px 4px -2px hsla(0, 0%, 0%, 0.2);
-  --shadow-lg:    0 10px 15px -3px hsla(0, 0%, 0%, 0.35), 0 4px 6px -4px hsla(0, 0%, 0%, 0.25);
-  --shadow-xl:    0 20px 25px -5px hsla(0, 0%, 0%, 0.4), 0 8px 10px -6px hsla(0, 0%, 0%, 0.3);
-  --shadow-glow:  0 0 20px hsla(217, 91%, 60%, 0.15);
+  --shadow-sm:    0 1px 2px hsla(0, 0%, 0%, 0.4);
+  --shadow-md:    0 4px 6px -1px hsla(0, 0%, 0%, 0.5), 0 2px 4px -2px hsla(0, 0%, 0%, 0.4);
+  --shadow-lg:    0 10px 15px -3px hsla(0, 0%, 0%, 0.6), 0 4px 6px -4px hsla(0, 0%, 0%, 0.5);
+  --shadow-xl:    0 20px 25px -5px hsla(0, 0%, 0%, 0.7), 0 8px 10px -6px hsla(0, 0%, 0%, 0.6);
+  --shadow-glow:  0 0 25px hsla(217, 91%, 60%, 0.2);
 
   /* ── Transitions ────────────────────────────────────────────── */
   --transition-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
@@ -107,7 +107,8 @@
   --z-tooltip:   900;
 
   /* ── Layout ─────────────────────────────────────────────────── */
-  --header-height: 3.5rem;
-  --sidebar-width: 16rem;
-  --container-max: 80rem;
+  --header-height: 4rem;
+  --sidebar-width: 17rem;
+  --sidebar-collapsed-width: 4.5rem;
+  --container-max: 90rem;
 }
