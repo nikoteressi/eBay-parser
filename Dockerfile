@@ -23,6 +23,8 @@ COPY --from=builder /app/.output /app/.output
 # Required to run drizzle migrations programmatically if needed in future
 COPY --from=builder /app/package.json /app/package.json
 COPY --from=builder /app/node_modules /app/node_modules
+COPY --from=builder /app/server/database/migrations /app/server/database/migrations
+
 
 EXPOSE 3000
 
