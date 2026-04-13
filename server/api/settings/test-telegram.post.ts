@@ -1,4 +1,4 @@
-import { testTelegramConnection } from '../../modules/notifier/index';
+import { testTelegramConnection, sendTelegram } from '../../modules/notifier/index';
 import { db } from '../../database/index';
 import { settings } from '../../database/schema';
 import { eq } from 'drizzle-orm';
@@ -26,10 +26,49 @@ export default defineEventHandler(async () => {
     throw createError({ statusCode: 400, statusMessage: 'Incomplete Telegram settings in DB' });
   }
 
-  const success = await testTelegramConnection({ botToken, chatId });
+  const chatIds = chatId.split(',').map(id => id.trim()).filter(Boolean);
+  
+  if (chatIds.length === 0) {
+    throw createError({ statusCode: 400, statusMessage: 'No valid Chat IDs provided' });
+  }
 
-  if (!success) {
-    throw createError({ statusCode: 500, statusMessage: 'Telegram connection failed' });
+  for (const cid of chatIds) {
+    const testResult = await testTelegramConnection({ botToken, chatId: cid });
+
+    if (!testResult.success) {
+      throw createError({ statusCode: 400, statusMessage: `Telegram connection failed for Chat ID ${cid}: ${testResult.error || 'Unknown error'}` });
+    }
+  }
+
+  try {
+    await sendTelegram(
+      { botToken, chatId },
+      {
+        queryLabel: 'System Test',
+        queryKeywords: 'test',
+        newItems: [
+          {
+            id: 'test-1',
+            ebayItemId: 'test-1',
+            title: 'Test Notification Working',
+            price: 99.99,
+            shippingCost: 0,
+            totalCost: 99.99,
+            currency: 'USD',
+            itemUrl: 'https://ebay.com',
+            buyingOption: 'FIXED_PRICE',
+            imageUrl: null,
+            acceptsOffers: false
+          }
+        ],
+        priceDrops: []
+      }
+    );
+  } catch (error) {
+    throw createError({ 
+      statusCode: 400, 
+      statusMessage: `Failed to send Telegram message: ${error instanceof Error ? error.message : String(error)}` 
+    });
   }
 
   return { success: true };

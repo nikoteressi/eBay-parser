@@ -5,15 +5,15 @@ export const useQueries = () => {
   const loading = ref(false)
   const queries = ref<any[]>([])
 
-  const fetchQueries = async () => {
-    loading.value = true
+  const fetchQueries = async (background = false) => {
+    if (!background) loading.value = true
     try {
       const data = await authFetch<any[]>('/api/queries')
       queries.value = data
     } catch (error) {
       console.error('Failed to fetch queries:', error)
     } finally {
-      loading.value = false
+      if (!background) loading.value = false
     }
   }
 

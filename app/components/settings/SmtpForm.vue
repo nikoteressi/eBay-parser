@@ -50,8 +50,8 @@
             <input type="email" id="smtp-from" class="input" v-model="form.from" placeholder="noreply@example.com">
           </div>
           <div class="form-group">
-            <label class="label" for="smtp-to">To Address</label>
-            <input type="email" id="smtp-to" class="input" v-model="form.to" placeholder="me@example.com">
+            <label class="label" for="smtp-to">To Address(es)</label>
+            <input type="text" id="smtp-to" class="input" v-model="form.to" placeholder="email1@example.com, email2@example.com">
           </div>
         </div>
         

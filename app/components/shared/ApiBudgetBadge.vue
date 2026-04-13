@@ -20,8 +20,8 @@ const { callsMade, dailyLimit, loading, fetchBudget } = useApiBudget()
 
 onMounted(() => {
   fetchBudget()
-  // Poll every 5 minutes to stay somewhat updated
-  const interval = setInterval(fetchBudget, 5 * 60 * 1000)
+  // Poll every 30 seconds to stay strictly up-to-date with background worker
+  const interval = setInterval(() => fetchBudget(true), 30 * 1000)
   onUnmounted(() => clearInterval(interval))
 })
 

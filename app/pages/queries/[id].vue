@@ -24,8 +24,25 @@
       </div>
 
       <div v-else class="items-sections">
+        <!-- New Listings -->
+        <section class="items-section">
+          <div class="section-header">
+            <div class="section-title">
+              <span class="pulse-indicator"></span>
+              <h2>New Listings <small>(Last 24h)</small></h2>
+            </div>
+            <span class="count-badge" :class="items?.newItems?.length ? 'accent' : ''">{{ items?.newItems?.length || 0 }}</span>
+          </div>
+          <div v-if="items?.newItems?.length" class="items-grid">
+            <ItemCard v-for="item in items.newItems" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" :nowMs="serverNowMs" />
+          </div>
+          <div v-else class="empty-state">
+            <p>No new listings found in the last 24 hours.</p>
+          </div>
+        </section>
+
         <!-- Price Drops -->
-        <section v-if="items.priceDrops.length > 0" class="items-section">
+        <section v-if="items?.priceDrops?.length" class="items-section">
           <div class="section-header">
             <div class="section-title">
               <svg class="text-success" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline><polyline points="17 18 23 18 23 12"></polyline></svg>
@@ -34,38 +51,21 @@
             <span class="count-badge success">{{ items.priceDrops.length }}</span>
           </div>
           <div class="items-grid">
-            <ItemCard v-for="item in items.priceDrops" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" />
+            <ItemCard v-for="item in items.priceDrops" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" :nowMs="serverNowMs" />
           </div>
         </section>
 
-        <!-- New Listings -->
-        <section class="items-section">
-          <div class="section-header">
-            <div class="section-title">
-              <svg class="text-accent" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-              <h2>New Listings <small>(Last 24h)</small></h2>
-            </div>
-            <span class="count-badge" :class="items.newItems.length > 0 ? 'accent' : ''">{{ items.newItems.length }}</span>
-          </div>
-          <div v-if="items.newItems.length > 0" class="items-grid">
-            <ItemCard v-for="item in items.newItems" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" />
-          </div>
-          <div v-else class="empty-section">
-            <p>No new items found in the last 24 hours.</p>
-          </div>
-        </section>
-
-        <!-- Ended Items -->
-        <section v-if="items.endedItems.length > 0" class="items-section">
+        <!-- Ended / Out of view -->
+        <section v-if="items?.endedItems?.length" class="items-section">
           <div class="section-header">
             <div class="section-title">
               <svg class="text-tertiary" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
-              <h2>Recently Ended</h2>
+              <h2>Ended or Sold</h2>
             </div>
             <span class="count-badge">{{ items.endedItems.length }}</span>
           </div>
-          <div class="items-grid">
-            <ItemCard v-for="item in items.endedItems" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" />
+          <div class="items-grid opacity-75">
+            <ItemCard v-for="item in items.endedItems" :key="item.id" :item="item" :lastViewedAt="lastViewedAt" :nowMs="serverNowMs" />
           </div>
         </section>
       </div>
@@ -99,6 +99,7 @@ const loadingQuery = ref(true)
 const loadingItems = ref(true)
 const isPolling = ref(false)
 const lastViewedAt = ref<number>(0)
+const serverNowMs = ref<number>(Date.now())
 const deleteDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 
 interface EbayItem {
@@ -142,14 +143,17 @@ onMounted(async () => {
   
   await fetchItems()
 
-  // 2. Update view time for NEXT visit
-  localStorage.setItem(`query_view_${route.params.id}`, Date.now().toString())
+  // 2. We no longer write localStorage here since fetchItems resolves it with precise serverTime
 })
 
 const fetchItems = async () => {
   loadingItems.value = true
   try {
     const data = await authFetch<any>(`/api/queries/${route.params.id}/items`)
+    if (data.serverTime) {
+      serverNowMs.value = new Date(data.serverTime).getTime()
+      localStorage.setItem(`query_view_${route.params.id}`, serverNowMs.value.toString())
+    }
     items.value = data
   } catch (err) {
     console.error('Failed to fetch items:', err)

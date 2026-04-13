@@ -62,7 +62,8 @@ export default defineEventHandler(async () => {
         currency: 'USD',
         itemUrl: 'https://ebay.com',
         buyingOption: 'FIXED_PRICE',
-        imageUrl: null
+        imageUrl: null,
+        acceptsOffers: false
       }
     ],
     priceDrops: []

@@ -198,15 +198,18 @@ export async function sendTelegram(
   payload: TelegramPayload,
 ): Promise<void> {
   const text = buildTelegramMessage(payload);
+  const chatIds = config.chatId.split(',').map(id => id.trim()).filter(Boolean);
 
-  await enqueue({
-    botToken: config.botToken,
-    chatId: config.chatId,
-    text,
-  });
+  for (const chatId of chatIds) {
+    await enqueue({
+      botToken: config.botToken,
+      chatId,
+      text,
+    });
+  }
 
   log.info(
-    `Telegram message queued for "${payload.queryLabel}": ` +
+    `Telegram message queued for "${payload.queryLabel}" to ${chatIds.length} chat(s): ` +
       `${payload.newItems.length} new, ${payload.priceDrops.length} drops`,
   );
 }

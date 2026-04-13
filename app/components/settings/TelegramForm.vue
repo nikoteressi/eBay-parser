@@ -21,8 +21,9 @@
         </div>
         
         <div class="form-group">
-          <label class="label" for="telegram-chat-id">Chat ID</label>
-          <input type="text" id="telegram-chat-id" class="input" v-model="form.chat_id" placeholder="-100123456789">
+          <label class="label" for="telegram-chat-id">Chat ID(s)</label>
+          <input type="text" id="telegram-chat-id" class="input" v-model="form.chat_id" placeholder="-100123456789, 987654321">
+          <span class="form-hint">Separate multiple Chat IDs with commas</span>
         </div>
         
         <div class="form-actions mt-4 flex items-center justify-between">

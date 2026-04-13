@@ -6,8 +6,8 @@ export const useApiBudget = () => {
   const dailyLimit = ref(5000)
   const loading = ref(false)
 
-  const fetchBudget = async () => {
-    loading.value = true
+  const fetchBudget = async (background = false) => {
+    if (!background) loading.value = true
     try {
       const data = await authFetch<{ callsMade: number, dailyLimit: number, status: string }>('/api/usage')
       callsMade.value = data.callsMade
@@ -15,7 +15,7 @@ export const useApiBudget = () => {
     } catch (error) {
       console.error('Failed to fetch API budget:', error)
     } finally {
-      loading.value = false
+      if (!background) loading.value = false
     }
   }
 

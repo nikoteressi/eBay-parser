@@ -65,7 +65,8 @@ import { computed } from 'vue'
 
 const props = defineProps<{
   item: any,
-  lastViewedAt?: number
+  lastViewedAt?: number,
+  nowMs?: number
 }>()
 
 const isPriceDrop = computed(() => {
@@ -79,7 +80,7 @@ const priceDiffPercent = computed(() => {
 })
 
 const activityBadge = computed(() => {
-  const now = Date.now()
+  const now = props.nowMs || Date.now()
   const twoHoursMs = 2 * 60 * 60 * 1000
   const lastViewed = props.lastViewedAt || 0
   
@@ -112,7 +113,9 @@ const activityBadge = computed(() => {
 })
 
 const formatTimeAgo = (timestamp: number) => {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000)
+  const now = props.nowMs || Date.now()
+  const seconds = Math.floor((now - timestamp) / 1000)
+  if (seconds < 0) return 'Just now'
   if (seconds < 60) return `${seconds}s ago`
   const minutes = Math.floor(seconds / 60)
   if (minutes < 60) return `${minutes}m ago`

@@ -106,7 +106,7 @@ export async function sendEmail(
   try {
     await transporter.sendMail({
       from: config.from,
-      to: config.to,
+      to: config.to.split(',').map(e => e.trim()).filter(Boolean).join(', '),
       subject,
       html,
     });

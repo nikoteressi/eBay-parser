@@ -35,6 +35,7 @@ export default defineEventHandler(async (event) => {
     .all();
 
   return {
+    serverTime: new Date().toISOString(),
     newItems: newItems.map(formatItem),
     priceDrops: priceDrops.map(formatItem).slice(0, 50),
     endedItems: endedItems.map(formatItem)

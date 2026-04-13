@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 import QueryCard from '~/components/dashboard/QueryCard.vue'
 import AddUrlModal from '~/components/dashboard/AddUrlModal.vue'
 import ConfirmDialog from '~/components/shared/ConfirmDialog.vue'
@@ -75,6 +75,10 @@ const { queries, loading, fetchQueries, addQuery, updateQuery, deleteQuery } = u
 
 onMounted(() => {
   fetchQueries()
+  const interval = setInterval(() => {
+    fetchQueries(true)
+  }, 30000)
+  onUnmounted(() => clearInterval(interval))
 })
 
 const openAddModal = () => {
