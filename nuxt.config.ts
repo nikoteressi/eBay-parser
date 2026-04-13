@@ -3,6 +3,15 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
 
+  nitro: {
+    serverAssets: [
+      {
+        baseName: 'migrations',
+        dir: './server/database/migrations',
+      },
+    ],
+  },
+
   runtimeConfig: {
     // Server-only (process.env.ADMIN_TOKEN)
     adminToken: process.env.ADMIN_TOKEN ?? '',
