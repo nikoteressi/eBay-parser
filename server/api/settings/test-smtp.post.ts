@@ -18,14 +18,17 @@ function readSetting(key: string): string | undefined {
   return row.value;
 }
 
-export default defineEventHandler(async () => {
-  const host = readSetting('smtp.host');
-  const port = readSetting('smtp.port');
-  const username = readSetting('smtp.username');
-  const password = readSetting('smtp.password');
-  const useTls = readSetting('smtp.use_tls');
-  const from = readSetting('smtp.from') || 'system@ebay-tracker.local';
-  const to = readSetting('smtp.to') || 'admin@example.com';
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event).catch(() => null);
+
+  const host = body?.host || readSetting('smtp.host');
+  const port = body?.port || readSetting('smtp.port');
+  const username = body?.username || readSetting('smtp.username');
+  const password = body?.password || readSetting('smtp.password');
+  let useTls = body?.use_tls;
+  if (useTls === undefined) useTls = readSetting('smtp.use_tls') === 'true';
+  const from = body?.from || readSetting('smtp.from') || 'system@ebay-tracker.local';
+  const to = body?.to || readSetting('smtp.to') || 'admin@example.com';
   
   if (!host || !port || !username || !password) {
     throw createError({ statusCode: 400, statusMessage: 'Incomplete SMTP settings in DB' });
@@ -33,10 +36,10 @@ export default defineEventHandler(async () => {
 
   const smtpConfig = {
     host,
-    port: parseInt(port, 10) || 587,
+    port: parseInt(String(port), 10) || 587,
     username,
     password,
-    useTls: useTls === 'true',
+    useTls: typeof useTls === 'boolean' ? useTls : String(useTls) === 'true',
     from,
     to
   };

@@ -86,7 +86,10 @@ const testConnection = async () => {
   testing.value = true
   testResult.value = null
   try {
-    await authFetch('/api/settings/test-telegram', { method: 'POST' })
+    await authFetch('/api/settings/test-telegram', { 
+      method: 'POST',
+      body: JSON.stringify(form)
+    })
     testResult.value = { success: true }
   } catch (error) {
     testResult.value = { success: false, error: error instanceof Error ? error.message : 'Connection failed' }

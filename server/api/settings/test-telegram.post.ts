@@ -18,9 +18,11 @@ function readSetting(key: string): string | undefined {
   return row.value;
 }
 
-export default defineEventHandler(async () => {
-  const botToken = readSetting('telegram.bot_token');
-  const chatId = readSetting('telegram.chat_id');
+export default defineEventHandler(async (event) => {
+  const body = await readBody(event).catch(() => null);
+
+  const botToken = String(body?.bot_token || readSetting('telegram.bot_token') || '');
+  const chatId = String(body?.chat_id || readSetting('telegram.chat_id') || '');
   
   if (!botToken || !chatId) {
     throw createError({ statusCode: 400, statusMessage: 'Incomplete Telegram settings in DB' });
