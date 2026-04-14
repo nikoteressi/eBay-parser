@@ -1,0 +1,1 @@
+ALTER TABLE `tracked_items` ADD `accepts_offers` integer DEFAULT false NOT NULL;
