@@ -29,6 +29,8 @@ interface UpdateQueryPayload {
   polling_interval?: string
   track_prices?: boolean
   status?: string
+  label?: string | null
+  raw_url?: string
 }
 
 export const useQueries = () => {
@@ -58,12 +60,17 @@ export const useQueries = () => {
   const updateQuery = async (id: string, updates: UpdateQueryPayload) => {
     try {
       await authFetch(`/api/queries/${id}`, { method: 'PATCH', body: updates })
-      const idx = queries.value.findIndex(q => q.id === id)
-      if (idx !== -1) {
-        if (updates.is_paused !== undefined) {
-          updates.status = updates.is_paused ? 'paused' : 'active'
+      if (updates.raw_url !== undefined) {
+        // URL changed → parsed_params changed on server; re-fetch to get accurate state
+        await fetchQueries(true)
+      } else {
+        const idx = queries.value.findIndex(q => q.id === id)
+        if (idx !== -1) {
+          if (updates.is_paused !== undefined) {
+            updates.status = updates.is_paused ? 'paused' : 'active'
+          }
+          queries.value[idx] = { ...queries.value[idx], ...updates } as Query
         }
-        queries.value[idx] = { ...queries.value[idx], ...updates } as Query
       }
     } catch (error) {
       console.error('Failed to update query:', error)

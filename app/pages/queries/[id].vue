@@ -8,12 +8,13 @@
     </div>
 
     <div v-if="loadingQuery" class="skeleton header-skeleton"></div>
-    <QueryDetailsHeader 
+    <QueryDetailsHeader
       v-else-if="currentQuery"
       :query="currentQuery"
       :isPolling="isPolling"
       @forcePoll="handleForcePoll"
       @togglePause="handleTogglePause"
+      @edit="handleEdit"
       @delete="handleDelete"
     />
 
@@ -71,7 +72,9 @@
       </div>
     </div>
 
-    <ConfirmDialog 
+    <EditQueryModal ref="editModal" @submit="handleEditSubmit" />
+
+    <ConfirmDialog
       ref="deleteDialog"
       title="Delete Tracked Query"
       message="Are you sure you want to stop tracking this search? All historical data will be removed."
@@ -87,6 +90,7 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import QueryDetailsHeader from '~/components/dashboard/QueryDetailsHeader.vue'
 import ItemCard from '~/components/dashboard/ItemCard.vue'
+import EditQueryModal from '~/components/dashboard/EditQueryModal.vue'
 import ConfirmDialog from '~/components/shared/ConfirmDialog.vue'
 import { authFetch } from '~/composables/useAuthFetch'
 import { useQueries } from '~/composables/useQueries'
@@ -101,6 +105,7 @@ const isPolling = ref(false)
 const lastViewedAt = ref<number>(0)
 const serverNowMs = ref<number>(Date.now())
 const deleteDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
+const editModal = ref<InstanceType<typeof EditQueryModal> | null>(null)
 
 interface EbayItem {
   id: string
@@ -190,6 +195,16 @@ const executeDelete = async () => {
   if (!currentQuery.value) return
   await deleteQuery(currentQuery.value.id)
   router.push('/')
+}
+
+const handleEdit = () => {
+  if (!currentQuery.value) return
+  editModal.value?.open(currentQuery.value)
+}
+
+const handleEditSubmit = async (data: { label: string; raw_url: string }) => {
+  if (!currentQuery.value) return
+  await updateQuery(currentQuery.value.id, { label: data.label || null, raw_url: data.raw_url })
 }
 </script>
 

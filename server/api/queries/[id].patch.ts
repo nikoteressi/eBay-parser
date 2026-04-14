@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../database/index';
 import { trackedQueries } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
+import { translateUrl } from '../../modules/url-translator/index';
 
 const log = createLogger('api:queries');
 
@@ -10,6 +11,9 @@ interface QueryDbUpdates {
   status?: 'active' | 'paused' | 'error';
   pollingInterval?: '5m' | '15m' | '30m' | '1h' | '6h';
   trackPrices?: boolean;
+  label?: string | null;
+  rawUrl?: string;
+  parsedParams?: string;
   updatedAt?: string;
 }
 
@@ -32,6 +36,16 @@ export default defineEventHandler(async (event) => {
     dbUpdates.pollingInterval = updates.polling_interval;
   }
   if (updates.track_prices !== undefined) dbUpdates.trackPrices = updates.track_prices;
+  if (updates.label !== undefined) dbUpdates.label = updates.label || null;
+  if (updates.raw_url !== undefined) {
+    try {
+      const translated = translateUrl(updates.raw_url);
+      dbUpdates.rawUrl = updates.raw_url;
+      dbUpdates.parsedParams = JSON.stringify(translated.apiParams);
+    } catch (err) {
+      throw createError({ statusCode: 400, statusMessage: `Invalid eBay URL: ${(err as Error).message}` });
+    }
+  }
 
   if (Object.keys(dbUpdates).length > 0) {
     dbUpdates.updatedAt = new Date().toISOString();

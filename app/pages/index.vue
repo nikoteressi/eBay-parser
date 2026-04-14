@@ -33,16 +33,18 @@
         <span class="create-text">Add New Search</span>
       </div>
 
-      <QueryCard 
-        v-for="query in queries" 
-        :key="query.id" 
+      <QueryCard
+        v-for="query in queries"
+        :key="query.id"
         :query="query"
         @update="updateQuery"
         @delete="confirmDelete"
+        @edit="openEditModal"
       />
     </div>
 
     <AddUrlModal ref="addModal" @submit="addQuery" />
+    <EditQueryModal ref="editModal" @submit="handleEditSubmit" />
     
     <ConfirmDialog 
       ref="deleteDialog"
@@ -59,8 +61,10 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import QueryCard from '~/components/dashboard/QueryCard.vue'
 import AddUrlModal from '~/components/dashboard/AddUrlModal.vue'
+import EditQueryModal from '~/components/dashboard/EditQueryModal.vue'
 import ConfirmDialog from '~/components/shared/ConfirmDialog.vue'
 import { useQueries } from '~/composables/useQueries'
+import type { Query } from '~/composables/useQueries'
 
 // Set layout context
 definePageMeta({
@@ -68,8 +72,10 @@ definePageMeta({
 })
 
 const addModal = ref<InstanceType<typeof AddUrlModal> | null>(null)
+const editModal = ref<InstanceType<typeof EditQueryModal> | null>(null)
 const deleteDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 const pendingDeleteId = ref<string | null>(null)
+const pendingEditQuery = ref<Query | null>(null)
 
 const { queries, loading, fetchQueries, addQuery, updateQuery, deleteQuery } = useQueries()
 
@@ -95,6 +101,17 @@ const executeDelete = async () => {
     await deleteQuery(pendingDeleteId.value)
     pendingDeleteId.value = null
   }
+}
+
+const openEditModal = (query: Query) => {
+  pendingEditQuery.value = query
+  editModal.value?.open(query)
+}
+
+const handleEditSubmit = async (data: { label: string; raw_url: string }) => {
+  if (!pendingEditQuery.value) return
+  await updateQuery(pendingEditQuery.value.id, { label: data.label || null, raw_url: data.raw_url })
+  pendingEditQuery.value = null
 }
 </script>
 
