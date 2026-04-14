@@ -28,6 +28,7 @@ export interface BrowseApiItemSummary {
   shippingOptions?: Array<{
     shippingCostType: string;
     shippingCost?: { value: string; currency: string };
+    type?: string;
   }>;
   buyingOptions: string[];     // e.g. ['FIXED_PRICE'] or ['AUCTION']
   itemLocation?: { country: string };
@@ -162,20 +163,48 @@ function buildSearchUrl(
   return url;
 }
 
+type ShippingOption = NonNullable<BrowseApiItemSummary['shippingOptions']>[number];
+
+function isLocalPickup(option: ShippingOption): boolean {
+  return /pickup/i.test(option.type ?? '');
+}
+
+function parseShippingValue(option: ShippingOption): number | null {
+  const raw = option.shippingCost?.value;
+  if (raw == null) return null;
+  const parsed = parseFloat(raw);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/**
+ * Extracts the effective shipping cost from Browse API `shippingOptions`.
+ *
+ * eBay may return Local Pickup ($0) alongside paid delivery options, so we
+ * must filter pickup out whenever real shipping options exist — otherwise
+ * the first entry heuristic makes paid shipping look free. Calculated rates
+ * without a concrete value are treated as 0 (see ARCHITECTURE.md §5.2).
+ */
+function extractShippingCost(options: BrowseApiItemSummary['shippingOptions']): number {
+  if (!options || options.length === 0) return 0;
+
+  const deliveryOptions = options.filter((o) => !isLocalPickup(o));
+  const candidates = deliveryOptions.length > 0 ? deliveryOptions : options;
+
+  let lowest: number | null = null;
+  for (const option of candidates) {
+    const value = parseShippingValue(option);
+    if (value == null || value < 0) continue;
+    if (lowest == null || value < lowest) lowest = value;
+  }
+
+  return lowest ?? 0;
+}
+
 function normalizeItem(raw: BrowseApiItemSummary): NormalizedEbayItem {
   const price = parseFloat(raw.price.value) || 0;
   const currency = raw.price.currency;
 
-  // Extract shipping cost — prefer the first non-calculated option
-  let shippingCost = 0;
-  if (raw.shippingOptions && raw.shippingOptions.length > 0) {
-    const shipping = raw.shippingOptions[0];
-    if (shipping?.shippingCost) {
-      shippingCost = parseFloat(shipping.shippingCost.value) || 0;
-    }
-    // If shippingCostType is 'CALCULATED', cost may not be available
-    // — treat as 0 (documented in ARCHITECTURE.md §5.2)
-  }
+  const shippingCost = extractShippingCost(raw.shippingOptions);
 
   // Determine buying option
   let buyingOption: NormalizedEbayItem['buyingOption'] = 'FIXED_PRICE';
