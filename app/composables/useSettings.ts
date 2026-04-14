@@ -3,13 +3,12 @@ import { authFetch } from './useAuthFetch'
 
 export const useSettings = () => {
   const loading = ref(false)
-  const settings = ref<Record<string, any>>({})
+  const settings = ref<Record<string, string>>({})
 
   const fetchSettings = async () => {
     loading.value = true
     try {
-      const data = await authFetch<Record<string, any>>('/api/settings')
-      settings.value = data
+      settings.value = await authFetch<Record<string, string>>('/api/settings')
     } catch (error) {
       console.error('Failed to load settings:', error)
     } finally {
@@ -19,10 +18,7 @@ export const useSettings = () => {
 
   const saveSettings = async (updates: Record<string, string>) => {
     try {
-      await authFetch('/api/settings', {
-        method: 'PUT',
-        body: updates
-      })
+      await authFetch('/api/settings', { method: 'PUT', body: updates })
       settings.value = { ...settings.value, ...updates }
       return true
     } catch (error) {

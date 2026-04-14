@@ -2,15 +2,15 @@ import { ulid } from 'ulid';
 import { db } from '../../database/index';
 import { trackedQueries } from '../../database/schema';
 import { translateUrl } from '../../modules/url-translator/index';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('api:queries');
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  
-  if (!body || !body.raw_url) {
-    throw createError({
-      statusCode: 400,
-      statusMessage: 'raw_url is required',
-    });
+
+  if (!body?.raw_url) {
+    throw createError({ statusCode: 400, statusMessage: 'raw_url is required' });
   }
 
   // 1. Validate & Translate URL
@@ -25,35 +25,35 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2. Prepare defaults
-  const pollingInterval = body.polling_interval || '15m';
-  const trackPrices = body.track_prices !== undefined ? body.track_prices : true;
-  const label = body.label || '';
-  
+  const VALID_INTERVALS = ['5m', '15m', '30m', '1h', '6h'] as const;
+  type PollingInterval = typeof VALID_INTERVALS[number];
+  const rawInterval = body.polling_interval ?? '15m';
+  const pollingInterval: PollingInterval = VALID_INTERVALS.includes(rawInterval)
+    ? rawInterval
+    : '15m';
+  const trackPrices: boolean = body.track_prices ?? true;
+  const label: string = body.label ?? '';
+
   // 3. Insert into DB
   const queryId = ulid();
   const newQuery = {
     id: queryId,
     label,
-    rawUrl: body.raw_url,
-    parsedParams: JSON.stringify(parsed.summary), 
+    rawUrl: body.raw_url as string,
+    parsedParams: JSON.stringify(parsed.summary),
     pollingInterval,
     trackPrices,
     isPaused: false,
     status: 'active' as const,
   };
-  
-  await db.insert(trackedQueries).values(newQuery).run();
 
-  // 4. Register with Scheduler
-  // Since we might be running in Nitro without top-level initialized scheduler, 
-  // we'll try to get it, or assume it's running.
-  // Actually, wait, let's just use registerQuery
+  db.insert(trackedQueries).values(newQuery).run();
+
+  // 4. Register with Scheduler (fire-and-forget — avoids circular import at module load)
   import('../../modules/scheduler/index').then(scheduler => {
-    try {
-      scheduler.registerQuery(queryId, pollingInterval);
-    } catch(err) {
-      console.error('Failed to register query on scheduler:', err);
-    }
+    scheduler.registerQuery(queryId, pollingInterval);
+  }).catch(err => {
+    log.error(`Failed to register query ${queryId} with scheduler: ${err}`);
   });
 
   return newQuery;

@@ -2,7 +2,7 @@
   <NuxtLink :to="`/queries/${query.id}`" class="query-card" :class="{ 'card-paused': query.status === 'paused' }">
     <div class="card-top">
       <div class="label-section">
-        <h3 class="card-label truncate" :title="query.label">{{ query.label || 'Unnamed Query' }}</h3>
+        <h3 class="card-label truncate" :title="query.label ?? undefined">{{ query.label || 'Unnamed Query' }}</h3>
         <StatusChip :status="query.status" size="sm" />
       </div>
       
@@ -55,19 +55,20 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import StatusChip from './StatusChip.vue'
 import { authFetch } from '~/composables/useAuthFetch'
+import type { Query } from '~/composables/useQueries'
 
 const props = defineProps<{
-  query: any
+  query: Query
 }>()
 
 const emit = defineEmits<{
-  (e: 'update', id: string, updates: any): void
+  (e: 'update', id: string, updates: Partial<Query>): void
   (e: 'delete', id: string): void
 }>()
 
 const isPolling = ref(false)
 const now = ref(Date.now())
-let tickTimer: any = null
+let tickTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   tickTimer = setInterval(() => { now.value = Date.now() }, 30_000)
@@ -99,14 +100,15 @@ const confirmDelete = () => {
 }
 
 const summaryText = computed(() => {
-  if (!props.query.parsed_params) return 'No filters active'
-  let text = props.query.parsed_params.q || 'All items'
-  if (props.query.parsed_params.filter?.includes('FIXED_PRICE')) text += ' (BIN)'
+  const params = props.query.parsed_params
+  if (!params) return 'No filters active'
+  let text = (params.q as string | undefined) || 'All items'
+  if (typeof params.filter === 'string' && params.filter.includes('FIXED_PRICE')) text += ' (BIN)'
   return text
 })
 
 const timeAgo = computed(() => {
-  const polledAt = props.query.last_polled_at || props.query.lastPolledAt
+  const polledAt = props.query.last_polled_at
   if (!polledAt) return 'Never polled'
 
   const diffMs = now.value - new Date(polledAt).getTime()

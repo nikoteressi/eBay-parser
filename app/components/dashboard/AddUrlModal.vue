@@ -86,8 +86,15 @@
 import { ref, reactive } from 'vue'
 import { authFetch } from '~/composables/useAuthFetch'
 
+interface AddQueryForm {
+  label: string
+  raw_url: string
+  polling_interval: string
+  track_prices: boolean
+}
+
 const emit = defineEmits<{
-  (e: 'submit', data: any): void
+  (e: 'submit', data: AddQueryForm): void
 }>()
 
 const isOpen = ref(false)
@@ -111,7 +118,7 @@ const mockParsed = reactive({
 })
 
 // Debounce mock
-let timeout: any
+let timeout: ReturnType<typeof setTimeout> | undefined
 const handleUrlInput = () => {
   isValidating.value = true
   validationError.value = null
@@ -123,10 +130,10 @@ const handleUrlInput = () => {
       return
     }
     try {
-      const data = await authFetch('/api/queries/parse-url', {
+      const data = await authFetch<{ valid: boolean; error?: string; summary?: Record<string, unknown> }>('/api/queries/parse-url', {
         method: 'POST',
         body: { raw_url: form.raw_url }
-      }) as any
+      })
       if (!data.valid) {
         validationError.value = data.error || "Failed to parse"
       } else {

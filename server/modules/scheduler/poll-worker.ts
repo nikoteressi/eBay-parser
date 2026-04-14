@@ -16,17 +16,16 @@
 
 import { eq } from 'drizzle-orm';
 import { db } from '../../database/index';
-import { trackedQueries, settings } from '../../database/schema';
-import { checkBudget, recordCall, type BudgetCheck } from '../api-budget/index';
+import { trackedQueries } from '../../database/schema';
+import { checkBudget, recordCall } from '../api-budget/index';
 import { computeDiff, type DiffResult } from '../diff-engine/index';
 import { runGC } from '../garbage-collector/index';
 import { getEbayClient, type EbayClientConfig, type EbayClient } from '../ebay-client/index';
 import { dispatch } from '../notifier/index';
 import { ApiLimitExceededError } from '../api-budget/index';
 import { translateUrl } from '../url-translator/index';
-import { decrypt, isEncrypted } from '../../utils/encryption';
 import { createLogger } from '../../utils/logger';
-import type { BrowseApiParams } from '../url-translator/index';
+import { readSetting } from '../../utils/settings';
 
 const log = createLogger('poll-worker');
 
@@ -45,24 +44,6 @@ export interface PollResult {
 // ─────────────────────────────────────────────────────────────
 // Internal Helpers
 // ─────────────────────────────────────────────────────────────
-
-/**
- * Reads a setting value from the settings table, decrypting if it's a secret.
- */
-function readSetting(key: string): string | undefined {
-  const row = db.select().from(settings).where(eq(settings.key, key)).get();
-  if (!row) return undefined;
-
-  if (row.isSecret && isEncrypted(row.value)) {
-    try {
-      return decrypt(row.value);
-    } catch {
-      log.error(`Failed to decrypt "${key}" — re-save this setting via the UI`);
-      return undefined;
-    }
-  }
-  return row.value;
-}
 
 /**
  * Reads the default max pages from settings (default: 2).
@@ -128,9 +109,8 @@ export async function runPoll(queryId: string): Promise<PollResult> {
     }
 
     // ── Step 2: Check API budget ──
-    let budget: BudgetCheck;
     try {
-      budget = checkBudget();
+      checkBudget();
     } catch (error) {
       if (error instanceof ApiLimitExceededError) {
         db.update(trackedQueries)

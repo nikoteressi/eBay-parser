@@ -1,6 +1,17 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../../database/index';
 import { trackedQueries } from '../../database/schema';
+import { createLogger } from '../../utils/logger';
+
+const log = createLogger('api:queries');
+
+interface QueryDbUpdates {
+  isPaused?: boolean;
+  status?: 'active' | 'paused' | 'error';
+  pollingInterval?: '5m' | '15m' | '30m' | '1h' | '6h';
+  trackPrices?: boolean;
+  updatedAt?: string;
+}
 
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
@@ -9,33 +20,37 @@ export default defineEventHandler(async (event) => {
   }
 
   const updates = await readBody(event);
-  
+
   // Transform frontend keys to DB columns
-  const dbUpdates: any = {};
+  const dbUpdates: QueryDbUpdates = {};
   if (updates.is_paused !== undefined) {
     dbUpdates.isPaused = updates.is_paused;
     dbUpdates.status = updates.is_paused ? 'paused' : 'active';
   }
-  if (updates.polling_interval !== undefined) dbUpdates.pollingInterval = updates.polling_interval;
+  const VALID_INTERVALS = ['5m', '15m', '30m', '1h', '6h'] as const;
+  if (updates.polling_interval !== undefined && VALID_INTERVALS.includes(updates.polling_interval)) {
+    dbUpdates.pollingInterval = updates.polling_interval;
+  }
   if (updates.track_prices !== undefined) dbUpdates.trackPrices = updates.track_prices;
-  
+
   if (Object.keys(dbUpdates).length > 0) {
     dbUpdates.updatedAt = new Date().toISOString();
-    await db.update(trackedQueries).set(dbUpdates).where(eq(trackedQueries.id, id)).run();
+    db.update(trackedQueries).set(dbUpdates).where(eq(trackedQueries.id, id)).run();
   }
 
+  // Fire-and-forget — avoids circular import at module load time
   import('../../modules/scheduler/index').then(scheduler => {
-    try {
-      if (updates.polling_interval !== undefined) {
-        scheduler.updateQueryInterval(id, updates.polling_interval);
-      }
-      if (updates.is_paused === true) {
-        scheduler.unregisterQuery(id);
-      } else if (updates.is_paused === false) {
-        const query = db.select().from(trackedQueries).where(eq(trackedQueries.id, id)).get();
-        if (query) scheduler.registerQuery(id, query.pollingInterval);
-      }
-    } catch(err) {}
+    if (updates.polling_interval !== undefined) {
+      scheduler.updateQueryInterval(id, updates.polling_interval);
+    }
+    if (updates.is_paused === true) {
+      scheduler.unregisterQuery(id);
+    } else if (updates.is_paused === false) {
+      const query = db.select().from(trackedQueries).where(eq(trackedQueries.id, id)).get();
+      if (query) scheduler.registerQuery(id, query.pollingInterval);
+    }
+  }).catch(err => {
+    log.error(`Failed to sync scheduler for query ${id}: ${err}`);
   });
 
   return { success: true };

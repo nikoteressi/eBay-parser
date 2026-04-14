@@ -149,7 +149,7 @@ onMounted(async () => {
 const fetchItems = async () => {
   loadingItems.value = true
   try {
-    const data = await authFetch<any>(`/api/queries/${route.params.id}/items`)
+    const data = await authFetch<{ serverTime: string; newItems: EbayItem[]; priceDrops: EbayItem[]; endedItems: EbayItem[] }>(`/api/queries/${route.params.id}/items`)
     if (data.serverTime) {
       serverNowMs.value = new Date(data.serverTime).getTime()
       localStorage.setItem(`query_view_${route.params.id}`, serverNowMs.value.toString())

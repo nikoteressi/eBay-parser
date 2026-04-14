@@ -1,6 +1,9 @@
 import { useGracefulShutdown } from '../database/index';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('plugin:database');
 
 export default defineNitroPlugin((nitroApp) => {
   useGracefulShutdown(nitroApp);
-  console.log('[plugin:database] Graceful shutdown hook registered.');
+  log.info('Graceful shutdown hook registered.');
 });

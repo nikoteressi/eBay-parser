@@ -63,9 +63,29 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+interface EbayItem {
+  id: string
+  ebay_item_id: string
+  title: string
+  item_url: string
+  image_url: string | null
+  buying_option: string
+  current_price: number
+  current_shipping: number
+  first_seen_price: number
+  first_seen_shipping: number
+  first_seen_total_cost: number
+  current_total_cost: number
+  currency: string
+  first_seen_at: string
+  last_seen_at: string
+  ended_at: string | null
+  accepts_offers: boolean
+}
+
 const props = defineProps<{
-  item: any,
-  lastViewedAt?: number,
+  item: EbayItem
+  lastViewedAt?: number
   nowMs?: number
 }>()
 

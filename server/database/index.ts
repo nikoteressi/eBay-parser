@@ -43,11 +43,14 @@ export const sqliteDb = sqlite;
 // and ensures WAL checkpointing on production shutdown.
 // ─────────────────────────────────────────────────────────────
 import type { NitroApp } from 'nitropack';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('database');
 
 export function useGracefulShutdown(nitroApp: NitroApp) {
   nitroApp.hooks.hook('close', () => {
-    console.log('[database] Closing SQLite connection…');
+    log.info('Closing SQLite connection…');
     sqlite.close();
-    console.log('[database] SQLite connection closed.');
+    log.info('SQLite connection closed.');
   });
 }

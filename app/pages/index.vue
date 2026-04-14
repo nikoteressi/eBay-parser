@@ -42,7 +42,7 @@
       />
     </div>
 
-    <AddUrlModal ref="addModal" @submit="handleAddQuery" />
+    <AddUrlModal ref="addModal" @submit="addQuery" />
     
     <ConfirmDialog 
       ref="deleteDialog"
@@ -83,10 +83,6 @@ onMounted(() => {
 
 const openAddModal = () => {
   addModal.value?.open()
-}
-
-const handleAddQuery = async (formData: any) => {
-  await addQuery(formData)
 }
 
 const confirmDelete = (id: string) => {

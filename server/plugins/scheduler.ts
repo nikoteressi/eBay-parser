@@ -8,24 +8,27 @@
 // ─────────────────────────────────────────────────────────────
 
 import { startScheduler, stopScheduler } from '../modules/scheduler/index';
+import { createLogger } from '../utils/logger';
+
+const log = createLogger('plugin:scheduler');
 
 export default defineNitroPlugin(async (nitroApp) => {
-  console.log('[plugin:scheduler] Starting scheduler…');
+  log.info('Starting scheduler…');
 
   try {
     await startScheduler();
-    console.log('[plugin:scheduler] Scheduler started successfully.');
+    log.info('Scheduler started successfully.');
   } catch (error) {
     // Don't crash the server if the scheduler fails to start
     // (e.g., no queries in DB yet, or DB not migrated).
     const message = error instanceof Error ? error.message : String(error);
-    console.error(`[plugin:scheduler] Failed to start scheduler: ${message}`);
+    log.error(`Failed to start scheduler: ${message}`);
   }
 
   // Graceful shutdown
   nitroApp.hooks.hook('close', () => {
-    console.log('[plugin:scheduler] Stopping scheduler…');
+    log.info('Stopping scheduler…');
     stopScheduler();
-    console.log('[plugin:scheduler] Scheduler stopped.');
+    log.info('Scheduler stopped.');
   });
 });

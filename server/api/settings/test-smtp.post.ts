@@ -1,22 +1,5 @@
 import { testSmtpConnection, sendEmail } from '../../modules/notifier/index';
-import { db } from '../../database/index';
-import { settings } from '../../database/schema';
-import { eq } from 'drizzle-orm';
-import { decrypt, isEncrypted } from '../../utils/encryption';
-
-function readSetting(key: string): string | undefined {
-  const row = db.select().from(settings).where(eq(settings.key, key)).get();
-  if (!row) return undefined;
-  if (row.isSecret && isEncrypted(row.value)) {
-    try {
-      return decrypt(row.value);
-    } catch {
-      console.error(`[readSetting] Failed to decrypt "${key}" — re-save this setting`);
-      return undefined;
-    }
-  }
-  return row.value;
-}
+import { readSetting } from '../../utils/settings';
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => null);
@@ -29,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (useTls === undefined) useTls = readSetting('smtp.use_tls') === 'true';
   const from = body?.from || readSetting('smtp.from') || 'system@ebay-tracker.local';
   const to = body?.to || readSetting('smtp.to') || 'admin@example.com';
-  
+
   if (!host || !port || !username || !password) {
     throw createError({ statusCode: 400, statusMessage: 'Incomplete SMTP settings in DB' });
   }
@@ -50,7 +33,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 500, statusMessage: `SMTP connection failed: ${testResult.error}` });
   }
 
-  // Actually send a real test email
   await sendEmail(smtpConfig, {
     queryLabel: 'System Test',
     queryKeywords: 'test',

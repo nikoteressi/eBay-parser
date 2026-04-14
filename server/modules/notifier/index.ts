@@ -17,9 +17,9 @@
 import { eq } from 'drizzle-orm';
 import { ulid } from 'ulid';
 import { db } from '../../database/index';
-import { settings, notificationLog, trackedItems } from '../../database/schema';
-import { decrypt, isEncrypted } from '../../utils/encryption';
+import { notificationLog, trackedItems } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
+import { readSetting } from '../../utils/settings';
 import { sendEmail, type SmtpConfig, type EmailPayload } from './email-sender';
 import { sendTelegram, type TelegramConfig, type TelegramPayload } from './telegram-sender';
 import type { DiffResult, NewItemRecord, PriceDropRecord } from '../diff-engine/index';
@@ -54,24 +54,6 @@ export interface DispatchResult {
 // ─────────────────────────────────────────────────────────────
 // Settings Helpers
 // ─────────────────────────────────────────────────────────────
-
-/**
- * Reads a setting value, decrypting if it's a secret.
- */
-function readSetting(key: string): string | undefined {
-  const row = db.select().from(settings).where(eq(settings.key, key)).get();
-  if (!row) return undefined;
-
-  if (row.isSecret && isEncrypted(row.value)) {
-    try {
-      return decrypt(row.value);
-    } catch {
-      log.error(`Failed to decrypt "${key}" — re-save this setting via the UI`);
-      return undefined;
-    }
-  }
-  return row.value;
-}
 
 /**
  * Builds SMTP config from settings table.
@@ -315,8 +297,6 @@ function markItemsNotified(
   newItems: NewItemRecord[],
   priceDrops: PriceDropRecord[],
 ): void {
-  const now = new Date().toISOString();
-
   for (const item of newItems) {
     db.update(trackedItems)
       .set({ notifiedNew: true })

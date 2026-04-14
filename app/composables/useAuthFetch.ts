@@ -27,21 +27,16 @@ export function useAuthHeaders(): Record<string, string> {
 /**
  * Authenticated wrapper around $fetch.
  * Merges the Bearer token header into every request.
- *
- * Accepts the same options as Nuxt's $fetch but injects
- * the Authorization header automatically.
  */
-export async function authFetch<T = any>(
+export async function authFetch<T = unknown>(
   url: string,
-  opts: Record<string, any> = {},
+  opts: Parameters<typeof $fetch>[1] = {},
 ): Promise<T> {
-  const headers = useAuthHeaders();
-
-  return ($fetch as any)(url, {
+  return $fetch(url, {
     ...opts,
     headers: {
-      ...headers,
-      ...(opts.headers ?? {}),
+      ...useAuthHeaders(),
+      ...(opts?.headers as Record<string, string> ?? {}),
     },
   }) as Promise<T>;
 }

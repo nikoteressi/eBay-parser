@@ -58,16 +58,17 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import StatusChip from './StatusChip.vue'
+import type { Query } from '~/composables/useQueries'
 
 const props = defineProps<{
-  query: any
+  query: Query
   isPolling: boolean
 }>()
 
 defineEmits(['forcePoll', 'togglePause', 'delete'])
 
 const now = ref(Date.now())
-let tickTimer: any = null
+let tickTimer: ReturnType<typeof setInterval> | null = null
 
 onMounted(() => {
   tickTimer = setInterval(() => { now.value = Date.now() }, 30_000)
