@@ -197,7 +197,7 @@ export function runDiff(queryId: string, apiItems: NormalizedEbayItem[]): DiffRe
       log.debug(`New item discovered: "${apiItem.title}" ($${totalCost})`);
     } else {
       // ── Existing item: UPDATE ──
-      const updates: Partial<Record<string, unknown>> = {
+      const updates: Partial<typeof trackedItems.$inferInsert> = {
         currentPrice: apiItem.price,
         currentShipping: apiItem.shippingCost,
         currentTotalCost: totalCost,

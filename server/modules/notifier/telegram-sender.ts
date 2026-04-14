@@ -13,6 +13,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import { createLogger } from '../../utils/logger';
+import { getCurrencySymbol } from '../../utils/currency';
 import type { NewItemRecord, PriceDropRecord } from '../diff-engine/index';
 
 const log = createLogger('telegram-sender');
@@ -321,17 +322,6 @@ function escapeMd(text: string): string {
 function truncateTitle(title: string, maxLen: number = 60): string {
   if (title.length <= maxLen) return title;
   return title.slice(0, maxLen - 1) + '…';
-}
-
-function getCurrencySymbol(currency: string): string {
-  const symbols: Record<string, string> = {
-    USD: '$',
-    GBP: '£',
-    EUR: '€',
-    AUD: 'A$',
-    CAD: 'C$',
-  };
-  return symbols[currency] ?? `${currency} `;
 }
 
 function sleep(ms: number): Promise<void> {

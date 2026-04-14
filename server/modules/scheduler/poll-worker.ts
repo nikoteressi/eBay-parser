@@ -153,13 +153,12 @@ export async function runPoll(queryId: string): Promise<PollResult> {
 
     // ── Step 7: Dispatch notifications ──
     if (diffResult.newItems.length > 0 || diffResult.priceDrops.length > 0) {
-      const { apiParams: searchSummary } = translateUrl(query.rawUrl);
       try {
         const dispatchResult = await dispatch(
           {
             id: query.id,
             label: query.label,
-            keywords: searchSummary.q,
+            keywords: apiParams.q,
             notifyChannel: query.notifyChannel,
           },
           diffResult,

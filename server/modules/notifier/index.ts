@@ -192,6 +192,28 @@ export async function dispatch(
 // Internal Dispatch Helpers
 // ─────────────────────────────────────────────────────────────
 
+/** Writes one row to notification_log for a send attempt. */
+function logNotification(
+  queryId: string,
+  channel: 'email' | 'telegram',
+  payload: { newItems: unknown[]; priceDrops: unknown[] },
+  now: string,
+  errorMessage?: string,
+): void {
+  db.insert(notificationLog)
+    .values({
+      id: ulid(),
+      queryId,
+      channel,
+      newItemsCount: payload.newItems.length,
+      priceDropsCount: payload.priceDrops.length,
+      status: errorMessage ? 'failed' : 'sent',
+      errorMessage,
+      sentAt: now,
+    })
+    .run();
+}
+
 async function dispatchEmail(
   payload: EmailPayload,
   queryId: string,
@@ -204,37 +226,11 @@ async function dispatchEmail(
   try {
     await sendEmail(smtpConfig, payload);
     result.emailSent = true;
-
-    // Log success
-    db.insert(notificationLog)
-      .values({
-        id: ulid(),
-        queryId,
-        channel: 'email',
-        newItemsCount: payload.newItems.length,
-        priceDropsCount: payload.priceDrops.length,
-        status: 'sent',
-        sentAt: now,
-      })
-      .run();
+    logNotification(queryId, 'email', payload, now);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     result.emailError = msg;
-
-    // Log failure
-    db.insert(notificationLog)
-      .values({
-        id: ulid(),
-        queryId,
-        channel: 'email',
-        newItemsCount: payload.newItems.length,
-        priceDropsCount: payload.priceDrops.length,
-        status: 'failed',
-        errorMessage: msg,
-        sentAt: now,
-      })
-      .run();
-
+    logNotification(queryId, 'email', payload, now, msg);
     log.error(`Email dispatch failed for query ${queryId}: ${msg}`);
   }
 }
@@ -251,37 +247,11 @@ async function dispatchTelegram(
   try {
     await sendTelegram(telegramConfig, payload);
     result.telegramSent = true;
-
-    // Log success
-    db.insert(notificationLog)
-      .values({
-        id: ulid(),
-        queryId,
-        channel: 'telegram',
-        newItemsCount: payload.newItems.length,
-        priceDropsCount: payload.priceDrops.length,
-        status: 'sent',
-        sentAt: now,
-      })
-      .run();
+    logNotification(queryId, 'telegram', payload, now);
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     result.telegramError = msg;
-
-    // Log failure
-    db.insert(notificationLog)
-      .values({
-        id: ulid(),
-        queryId,
-        channel: 'telegram',
-        newItemsCount: payload.newItems.length,
-        priceDropsCount: payload.priceDrops.length,
-        status: 'failed',
-        errorMessage: msg,
-        sentAt: now,
-      })
-      .run();
-
+    logNotification(queryId, 'telegram', payload, now, msg);
     log.error(`Telegram dispatch failed for query ${queryId}: ${msg}`);
   }
 }

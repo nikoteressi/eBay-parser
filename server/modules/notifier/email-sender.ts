@@ -11,6 +11,7 @@
 
 import { createTransport, type Transporter } from 'nodemailer';
 import { createLogger } from '../../utils/logger';
+import { getCurrencySymbol } from '../../utils/currency';
 import type { NewItemRecord, PriceDropRecord } from '../diff-engine/index';
 
 const log = createLogger('email-sender');
@@ -330,13 +331,3 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#039;');
 }
 
-function getCurrencySymbol(currency: string): string {
-  const symbols: Record<string, string> = {
-    USD: '$',
-    GBP: '£',
-    EUR: '€',
-    AUD: 'A$',
-    CAD: 'C$',
-  };
-  return symbols[currency] ?? `${currency} `;
-}

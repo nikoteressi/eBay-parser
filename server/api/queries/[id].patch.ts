@@ -3,6 +3,7 @@ import { db } from '../../database/index';
 import { trackedQueries } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
 import { translateUrl } from '../../modules/url-translator/index';
+import { VALID_INTERVALS } from '../../utils/constants';
 
 const log = createLogger('api:queries');
 
@@ -31,7 +32,6 @@ export default defineEventHandler(async (event) => {
     dbUpdates.isPaused = updates.is_paused;
     dbUpdates.status = updates.is_paused ? 'paused' : 'active';
   }
-  const VALID_INTERVALS = ['5m', '15m', '30m', '1h', '6h'] as const;
   if (updates.polling_interval !== undefined && VALID_INTERVALS.includes(updates.polling_interval)) {
     dbUpdates.pollingInterval = updates.polling_interval;
   }

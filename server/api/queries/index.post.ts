@@ -3,6 +3,7 @@ import { db } from '../../database/index';
 import { trackedQueries } from '../../database/schema';
 import { translateUrl } from '../../modules/url-translator/index';
 import { createLogger } from '../../utils/logger';
+import { VALID_INTERVALS, type PollingInterval } from '../../utils/constants';
 
 const log = createLogger('api:queries');
 
@@ -25,8 +26,6 @@ export default defineEventHandler(async (event) => {
   }
 
   // 2. Prepare defaults
-  const VALID_INTERVALS = ['5m', '15m', '30m', '1h', '6h'] as const;
-  type PollingInterval = typeof VALID_INTERVALS[number];
   const rawInterval = body.polling_interval ?? '15m';
   const pollingInterval: PollingInterval = VALID_INTERVALS.includes(rawInterval)
     ? rawInterval
