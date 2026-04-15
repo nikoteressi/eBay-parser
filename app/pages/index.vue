@@ -25,14 +25,6 @@
     </div>
 
     <div v-else class="query-grid">
-      <!-- Create New Card -->
-      <div class="create-card" @click="openAddModal">
-        <div class="create-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-        </div>
-        <span class="create-text">Add New Search</span>
-      </div>
-
       <QueryCard
         v-for="query in queries"
         :key="query.id"
@@ -148,49 +140,6 @@ const handleEditSubmit = async (data: { label: string; raw_url: string }) => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-6);
-}
-
-.create-card {
-  border: 2px dashed var(--color-border-strong);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-3);
-  cursor: pointer;
-  transition: all var(--transition-base);
-  min-height: 200px;
-  color: var(--color-text-secondary);
-}
-
-.create-card:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-accent-subtle);
-}
-
-.create-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: var(--radius-full);
-  background: var(--color-bg-surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--color-border-subtle);
-  transition: all var(--transition-base);
-}
-
-.create-card:hover .create-icon {
-  background: var(--color-bg-primary);
-  border-color: var(--color-accent);
-  transform: scale(1.1);
-}
-
-.create-text {
-  font-weight: var(--weight-semibold);
-  font-size: var(--text-sm);
 }
 
 .card-skeleton {
