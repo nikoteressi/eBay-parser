@@ -60,6 +60,7 @@ function formatItem(item: TrackedItem) {
     currency: item.currency,
     first_seen_at: item.firstSeenAt,
     last_seen_at: item.lastSeenAt,
+    last_price_drop_at: item.lastPriceDropAt,
     ended_at: item.endedAt,
     accepts_offers: item.acceptsOffers,
   };

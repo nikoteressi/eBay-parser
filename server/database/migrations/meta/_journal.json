@@ -15,6 +15,13 @@
       "when": 1776183174967,
       "tag": "0001_misty_black_bird",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1776246246525,
+      "tag": "0002_tense_ronan",
+      "breakpoints": true
     }
   ]
 }

@@ -63,6 +63,7 @@ export const trackedItems = sqliteTable('tracked_items', {
   acceptsOffers: integer('accepts_offers', { mode: 'boolean' }).notNull().default(false),
   notifiedNew: integer('notified_new', { mode: 'boolean' }).notNull().default(false),
   lastNotifiedPrice: real('last_notified_price'),      // Total cost at last price-drop alert
+  lastPriceDropAt: text('last_price_drop_at'),         // ISO 8601, set only on genuine new drop
 }, (table) => [
   index('idx_items_query_status').on(table.queryId, table.itemStatus),
   uniqueIndex('idx_items_query_ebay').on(table.queryId, table.ebayItemId),

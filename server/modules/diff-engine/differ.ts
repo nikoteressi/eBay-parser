@@ -243,9 +243,10 @@ export function runDiff(queryId: string, apiItems: NormalizedEbayItem[]): DiffRe
             currency: existing.currency,
           });
 
-          // Update last_notified_price so we don't re-alert on the same drop
+          // Update last_notified_price so we don't re-alert on the same drop.
+          // Set last_price_drop_at to now so the UI badge shows accurately.
           db.update(trackedItems)
-            .set({ lastNotifiedPrice: totalCost })
+            .set({ lastNotifiedPrice: totalCost, lastPriceDropAt: now })
             .where(eq(trackedItems.id, existing.id))
             .run();
 

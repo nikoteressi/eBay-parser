@@ -1,0 +1,1 @@
+ALTER TABLE `tracked_items` ADD `last_price_drop_at` text;

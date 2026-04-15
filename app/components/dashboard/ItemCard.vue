@@ -79,6 +79,7 @@ interface EbayItem {
   currency: string
   first_seen_at: string
   last_seen_at: string
+  last_price_drop_at: string | null
   ended_at: string | null
   accepts_offers: boolean
 }
@@ -102,11 +103,11 @@ const priceDiffPercent = computed(() => {
 const activityBadge = computed(() => {
   const now = props.nowMs || Date.now()
   const twoHoursMs = 2 * 60 * 60 * 1000
+  const oneDayMs = 24 * 60 * 60 * 1000
   const lastViewed = props.lastViewedAt || 0
-  
+
   const firstSeen = new Date(props.item.first_seen_at).getTime()
-  const lastSeen = new Date(props.item.last_seen_at).getTime()
-  
+
   // 1. Just Found (priority)
   // Must be newer than lastViewed and within 2h
   if (firstSeen > lastViewed && (now - firstSeen < twoHoursMs)) {
@@ -117,18 +118,22 @@ const activityBadge = computed(() => {
       timeAgo: formatTimeAgo(firstSeen)
     }
   }
-  
+
   // 2. Just Dropped
-  // Must be newer than lastViewed (meaning drop happened since last visit) and within 2h
-  if (isPriceDrop.value && lastSeen > lastViewed && (now - lastSeen < twoHoursMs)) {
-    return {
-      type: 'drop',
-      icon: '📉',
-      label: 'Just Dropped',
-      timeAgo: formatTimeAgo(lastSeen)
+  // Requires last_price_drop_at from backend (set only when a genuine new drop is detected).
+  // Badge shows only if the drop occurred within the last 24 hours.
+  if (props.item.last_price_drop_at) {
+    const droppedAt = new Date(props.item.last_price_drop_at).getTime()
+    if (now - droppedAt < oneDayMs) {
+      return {
+        type: 'drop',
+        icon: '📉',
+        label: 'Just Dropped',
+        timeAgo: formatTimeAgo(droppedAt)
+      }
     }
   }
-  
+
   return null
 })
 
