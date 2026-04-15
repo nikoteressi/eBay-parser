@@ -234,7 +234,9 @@ export function stopScheduler(): void {
  */
 export function registerQuery(queryId: string, interval: string): void {
   if (!cronManager) {
-    log.warn('Scheduler not initialized — cannot register query');
+    if (process.env.DISABLE_SCHEDULER !== '1') {
+      log.warn('Scheduler not initialized — cannot register query');
+    }
     return;
   }
 

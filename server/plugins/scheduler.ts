@@ -18,6 +18,11 @@ const cron = require('node-cron');
 const log = createLogger('plugin:scheduler');
 
 export default defineNitroPlugin(async (nitroApp) => {
+  if (process.env.DISABLE_SCHEDULER === '1') {
+    log.info('DISABLE_SCHEDULER=1 — skipping scheduler and budget-sync cron.');
+    return;
+  }
+
   log.info('Starting scheduler…');
 
   // Trigger an initial boot-time sync (non-blocking)
