@@ -97,11 +97,18 @@ function reconcileMigrationTable(migrationsFolder: string): void {
       const match = stmt.match(/ADD\s+(?:COLUMN\s+)?`?(\w+)`?/i);
       if (!match) { alreadyApplied = false; break; }
 
-      const colName = match[1];
-      const tableMatch = stmt.match(/ALTER\s+TABLE\s+`?(\w+)`?/i);
-      if (!tableMatch) { alreadyApplied = false; break; }
+      const colName = match[1]
+      if (!colName) {
+        alreadyApplied = false
+        break
+      }
+      const tableMatch = stmt.match(/ALTER\s+TABLE\s+`?(\w+)`?/i)
+      if (!tableMatch || !tableMatch[1]) {
+        alreadyApplied = false
+        break
+      }
 
-      const tableName = tableMatch[1];
+      const tableName = tableMatch[1]
       const cols = sqliteDb
         .prepare(`PRAGMA table_info("${tableName}")`)
         .all()

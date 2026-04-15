@@ -94,6 +94,7 @@ import EditQueryModal from '~/components/dashboard/EditQueryModal.vue'
 import ConfirmDialog from '~/components/shared/ConfirmDialog.vue'
 import { authFetch } from '~/composables/useAuthFetch'
 import { useQueries } from '~/composables/useQueries'
+import type { EbayItem } from '~/types/ebay'
 
 const route = useRoute()
 const router = useRouter()
@@ -107,20 +108,6 @@ const serverNowMs = ref<number>(Date.now())
 const deleteDialog = ref<InstanceType<typeof ConfirmDialog> | null>(null)
 const editModal = ref<InstanceType<typeof EditQueryModal> | null>(null)
 
-interface EbayItem {
-  id: string
-  ebay_item_id: string
-  title: string
-  item_url: string
-  image_url: string
-  buying_option: string
-  current_total_cost: number
-  first_seen_total_cost: number
-  current_shipping: number
-  currency: string
-  first_seen_at: string
-  last_seen_at: string
-}
 
 const items = ref<{
   newItems: EbayItem[]

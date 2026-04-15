@@ -41,12 +41,17 @@ interface AnalyticsResponse {
 const DEFAULT_DAILY_LIMIT = 5000;
 
 function extractResources(data: AnalyticsResponse | AnalyticsRateLimitGroup[]): AnalyticsResource[] {
+  // Case-insensitive find for apiContext="buy" and apiName="browse"
+  const isBuyBrowse = (r: AnalyticsRateLimitGroup) => 
+    r.apiContext?.toLowerCase() === 'buy' && 
+    r.apiName?.toLowerCase() === 'browse';
+
   if (Array.isArray(data)) {
-    const match = data.find(r => r.apiContext === 'buy' && r.apiName === 'browse');
+    const match = data.find(isBuyBrowse);
     return match?.resources ?? [];
   }
   if (Array.isArray(data.rateLimits)) {
-    const match = data.rateLimits.find(r => r.apiContext === 'buy' && r.apiName === 'browse');
+    const match = data.rateLimits.find(isBuyBrowse);
     return match?.resources ?? [];
   }
   if (Array.isArray(data.resources)) {

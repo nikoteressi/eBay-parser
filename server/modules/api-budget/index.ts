@@ -203,6 +203,6 @@ export async function syncBudgetWithEbay(): Promise<void> {
       .run();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    log.error(`Failed to sync budget with eBay: ${message}`);
+    log.warn(`Could not sync budget with eBay (falling back to default limits): ${message}`);
   }
 }
