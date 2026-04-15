@@ -1,5 +1,7 @@
 {
   "name": "eBay-parser",
+  "version": "1.0.0",
+  "description": "Zero-click eBay deal tracker with Telegram & Email alerts",
   "type": "module",
   "private": true,
   "scripts": {
