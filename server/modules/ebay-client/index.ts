@@ -16,6 +16,7 @@ import {
   type NormalizedEbayItem,
   type SearchOptions,
 } from './browse-api';
+import { getAnalyticsRateLimits, type RateLimitStatus } from './analytics-api';
 import type { BrowseApiParams } from '../url-translator/index';
 
 // ─────────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ import type { BrowseApiParams } from '../url-translator/index';
 export { EbayAuthError } from './auth';
 export { EbayApiError, type NormalizedEbayItem } from './browse-api';
 export { TokenCache } from './token-cache';
+export { type RateLimitStatus } from './analytics-api';
 
 // ─────────────────────────────────────────────────────────────
 // Public Types
@@ -71,6 +73,25 @@ export class EbayClient {
   // ───────────────────────────────────────────────────────────
   // Public API
   // ───────────────────────────────────────────────────────────
+
+  /**
+   * Fetches real-time rate limit data from the Developer Analytics API
+   * for the Browse API resource.
+   */
+  async getRateLimits(): Promise<RateLimitStatus> {
+    const accessToken = await this.tokenCache.getToken();
+    
+    try {
+      return await getAnalyticsRateLimits(accessToken, this.environment);
+    } catch (error) {
+      if (error instanceof EbayApiError && error.statusCode === 401) {
+        this.tokenCache.invalidate();
+        const freshToken = await this.tokenCache.getToken();
+        return await getAnalyticsRateLimits(freshToken, this.environment);
+      }
+      throw error;
+    }
+  }
 
   /**
    * Proactively authenticates — fetches a token if not already cached.

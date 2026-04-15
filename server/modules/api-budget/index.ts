@@ -13,6 +13,8 @@ import { eq, sql } from 'drizzle-orm';
 import { db } from '../../database/index';
 import { apiUsageLog } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
+import { getEbayClient } from '../ebay-client/index';
+import { readSetting } from '../../utils/settings';
 
 const log = createLogger('api-budget');
 
@@ -150,4 +152,57 @@ export function recordCall(count: number = 1): void {
     .run();
 
   log.debug(`Recorded ${count} API call(s) for ${today}`);
+}
+
+/**
+ * Syncs the local API budget tracking with real limits from eBay.
+ * Overwrites the `api_usage_log` entry for today with the exact usage snapshot.
+ */
+export async function syncBudgetWithEbay(): Promise<void> {
+  const appId = readSetting('ebay.app_id');
+  const clientSecret = readSetting('ebay.client_secret');
+  const marketplace = readSetting('ebay.marketplace') || 'EBAY_US';
+  const envPref = readSetting('ebay.environment');
+  const environment = (envPref === 'sandbox' ? 'sandbox' : 'production') as 'production' | 'sandbox';
+
+  if (!appId || !clientSecret) {
+    log.warn('Cannot sync budget: eBay credentials not configured');
+    return;
+  }
+
+  try {
+    const client = getEbayClient({
+      credentials: { clientId: appId, clientSecret },
+      marketplace,
+      environment
+    });
+
+    const rates = await client.getRateLimits();
+    const callsMade = rates.limit - rates.remaining;
+
+    log.info(`Synced budget from eBay: limit=${rates.limit}, remaining=${rates.remaining}, count=${callsMade}`);
+
+    const today = todayUTC();
+    const now = new Date().toISOString();
+
+    db.insert(apiUsageLog)
+      .values({
+        date: today,
+        callsMade: callsMade,
+        dailyLimit: rates.limit,
+        updatedAt: now,
+      })
+      .onConflictDoUpdate({
+        target: apiUsageLog.date,
+        set: {
+          callsMade: callsMade,
+          dailyLimit: rates.limit,
+          updatedAt: now,
+        },
+      })
+      .run();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    log.error(`Failed to sync budget with eBay: ${message}`);
+  }
 }
