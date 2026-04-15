@@ -62,6 +62,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { computeActivityBadge } from '~/utils/activity-badge'
 
 interface EbayItem {
   id: string
@@ -100,53 +101,14 @@ const priceDiffPercent = computed(() => {
   return Math.round((diff / props.item.first_seen_total_cost) * 100)
 })
 
-const activityBadge = computed(() => {
-  const now = props.nowMs || Date.now()
-  const twoHoursMs = 2 * 60 * 60 * 1000
-  const oneDayMs = 24 * 60 * 60 * 1000
-  const lastViewed = props.lastViewedAt || 0
-
-  const firstSeen = new Date(props.item.first_seen_at).getTime()
-
-  // 1. Just Found (priority)
-  // Must be newer than lastViewed and within 2h
-  if (firstSeen > lastViewed && (now - firstSeen < twoHoursMs)) {
-    return {
-      type: 'new',
-      icon: '🔥',
-      label: 'Just Found',
-      timeAgo: formatTimeAgo(firstSeen)
-    }
-  }
-
-  // 2. Just Dropped
-  // Requires last_price_drop_at from backend (set only when a genuine new drop is detected).
-  // Badge shows only if the drop occurred within the last 24 hours.
-  if (props.item.last_price_drop_at) {
-    const droppedAt = new Date(props.item.last_price_drop_at).getTime()
-    if (now - droppedAt < oneDayMs) {
-      return {
-        type: 'drop',
-        icon: '📉',
-        label: 'Just Dropped',
-        timeAgo: formatTimeAgo(droppedAt)
-      }
-    }
-  }
-
-  return null
-})
-
-const formatTimeAgo = (timestamp: number) => {
-  const now = props.nowMs || Date.now()
-  const seconds = Math.floor((now - timestamp) / 1000)
-  if (seconds < 0) return 'Just now'
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  return `${hours}h ago`
-}
+const activityBadge = computed(() =>
+  computeActivityBadge({
+    firstSeenAt: props.item.first_seen_at,
+    lastPriceDropAt: props.item.last_price_drop_at,
+    lastViewedAt: props.lastViewedAt,
+    nowMs: props.nowMs,
+  })
+)
 
 const formatCurrency = (val: number) => {
   return new Intl.NumberFormat('en-US', {

@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { eq } from 'drizzle-orm';
-import { runGC } from './index';
-import { db } from '../../database/index';
-import { trackedQueries, trackedItems } from '../../database/schema';
+import { runGC } from '../../server/modules/garbage-collector/index';
+import { db } from '../../server/database/index';
+import { trackedQueries, trackedItems } from '../../server/database/schema';
 import { ulid } from 'ulid';
 
 const TEST_QUERY_ID = ulid();
@@ -47,7 +47,7 @@ describe('Garbage Collector', () => {
       itemStatus: 'out_of_view',
       firstSeenAt: daysAgoStr(20),
       lastSeenAt: daysAgoStr(15),
-      outOfViewSince: daysAgoStr(10), // > 7 days ago
+      outOfViewSince: daysAgoStr(10),
     }).run();
 
     const gc = runGC(TEST_QUERY_ID);
@@ -74,7 +74,7 @@ describe('Garbage Collector', () => {
       itemStatus: 'ended_or_sold',
       firstSeenAt: daysAgoStr(50),
       lastSeenAt: daysAgoStr(45),
-      endedAt: daysAgoStr(35), // > 30 days ago
+      endedAt: daysAgoStr(35),
     }).run();
 
     const gc = runGC(TEST_QUERY_ID);

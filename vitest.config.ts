@@ -10,5 +10,6 @@ export default defineConfig({
     env: {
       DATABASE_PATH: '/tmp/test-db.sqlite',
     },
+    fileParallelism: false,
   },
 });
