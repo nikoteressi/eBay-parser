@@ -61,14 +61,14 @@
 import { ref, reactive } from 'vue'
 
 const props = defineProps<{
-  settings: Record<string, any>
+  settings: Record<string, string>
 }>()
 
 const form = reactive({
-  polling_interval: props.settings['defaults.polling_interval'] || '15m',
+  polling_interval: props.settings['defaults.polling_interval'] ?? '15m',
   max_pages: Number(props.settings['defaults.max_pages']) || 2,
-  grace_period_days: props.settings['defaults.grace_period_days'] || '7',
-  retention_days: props.settings['defaults.retention_days'] || '30'
+  grace_period_days: props.settings['defaults.grace_period_days'] ?? '7',
+  retention_days: props.settings['defaults.retention_days'] ?? '30',
 })
 
 const saving = ref(false)
@@ -79,15 +79,13 @@ const emit = defineEmits<{
 
 const save = () => {
   saving.value = true
-  setTimeout(() => {
-    emit('save', {
-      'defaults.polling_interval': form.polling_interval,
-      'defaults.max_pages': String(form.max_pages),
-      'defaults.grace_period_days': String(form.grace_period_days),
-      'defaults.retention_days': String(form.retention_days)
-    })
-    saving.value = false
-  }, 500)
+  emit('save', {
+    'defaults.polling_interval': form.polling_interval,
+    'defaults.max_pages': String(form.max_pages),
+    'defaults.grace_period_days': String(form.grace_period_days),
+    'defaults.retention_days': String(form.retention_days),
+  })
+  saving.value = false
 }
 </script>
 

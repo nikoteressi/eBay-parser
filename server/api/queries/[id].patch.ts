@@ -4,6 +4,7 @@ import { trackedQueries } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
 import { translateUrl } from '../../modules/url-translator/index';
 import { VALID_INTERVALS } from '../../utils/constants';
+import { requireRouterParam } from '../../utils/router';
 
 const log = createLogger('api:queries');
 
@@ -19,11 +20,7 @@ interface QueryDbUpdates {
 }
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing ID' });
-  }
-
+  const id = requireRouterParam(event, 'id');
   const updates = await readBody(event);
 
   // Transform frontend keys to DB columns

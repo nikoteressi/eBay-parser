@@ -93,12 +93,13 @@ export class CronManager {
    * Stops and destroys all cron jobs.
    */
   destroyAll(): void {
+    const count = this.jobs.size;
     for (const [queryId, task] of this.jobs) {
       task.stop();
       log.debug(`Cron destroyed: query ${queryId}`);
     }
     this.jobs.clear();
-    log.info(`All cron jobs destroyed (${this.jobs.size} remaining)`);
+    log.info(`All cron jobs destroyed (${count} total)`);
   }
 
   /**

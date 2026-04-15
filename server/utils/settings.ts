@@ -35,3 +35,13 @@ export function readSetting(key: string): string | undefined {
 
   return row.value;
 }
+
+/**
+ * Reads a numeric setting, returning the default if missing or not a finite positive number.
+ */
+export function readNumericSetting(key: string, defaultValue: number): number {
+  const raw = readSetting(key);
+  if (raw === undefined) return defaultValue;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : defaultValue;
+}

@@ -71,12 +71,15 @@ const pendingEditQuery = ref<Query | null>(null)
 
 const { queries, loading, fetchQueries, addQuery, updateQuery, deleteQuery } = useQueries()
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   fetchQueries()
-  const interval = setInterval(() => {
-    fetchQueries(true)
-  }, 30000)
-  onUnmounted(() => clearInterval(interval))
+  pollTimer = setInterval(() => fetchQueries(true), 30_000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 const openAddModal = () => {

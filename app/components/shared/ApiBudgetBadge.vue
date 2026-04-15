@@ -18,11 +18,15 @@ import { useApiBudget } from '~/composables/useApiBudget'
 
 const { callsMade, dailyLimit, loading, fetchBudget } = useApiBudget()
 
+let pollTimer: ReturnType<typeof setInterval> | null = null
+
 onMounted(() => {
   fetchBudget()
-  // Poll every 30 seconds to stay strictly up-to-date with background worker
-  const interval = setInterval(() => fetchBudget(true), 30 * 1000)
-  onUnmounted(() => clearInterval(interval))
+  pollTimer = setInterval(() => fetchBudget(true), 30_000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 const percentUsed = computed(() => {

@@ -69,16 +69,8 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { authFetch } from '~/composables/useAuthFetch'
+import { useUrlValidator } from '~/composables/useUrlValidator'
 import type { Query } from '~/composables/useQueries'
-
-interface ParsedSummary {
-  keywords: string
-  minPrice?: number
-  maxPrice?: number
-  buyItNowOnly: boolean
-  sortLabel: string
-}
 
 const emit = defineEmits<{
   (e: 'submit', data: { label: string; raw_url: string }): void
@@ -86,56 +78,25 @@ const emit = defineEmits<{
 
 const isOpen = ref(false)
 const isSubmitting = ref(false)
-const isValidating = ref(false)
-const validationError = ref<string | null>(null)
-const parsedSummary = ref<ParsedSummary | null>(null)
+
+const { isValidating, validationError, parsedSummary, validate, reset } = useUrlValidator()
 
 const form = reactive({
   label: '',
   raw_url: '',
 })
 
-let debounceTimer: ReturnType<typeof setTimeout> | undefined
-
-const handleUrlInput = () => {
-  isValidating.value = true
-  validationError.value = null
-  parsedSummary.value = null
-  clearTimeout(debounceTimer)
-  debounceTimer = setTimeout(async () => {
-    if (!form.raw_url.includes('ebay')) {
-      isValidating.value = false
-      validationError.value = 'Invalid URL. Must be an eBay URL.'
-      return
-    }
-    try {
-      const data = await authFetch<{ valid: boolean; error?: string; summary?: ParsedSummary }>('/api/queries/parse-url', {
-        method: 'POST',
-        body: { raw_url: form.raw_url },
-      })
-      if (!data.valid) {
-        validationError.value = data.error || 'Failed to parse URL'
-      } else {
-        parsedSummary.value = data.summary ?? null
-      }
-    } catch {
-      validationError.value = 'Failed to communicate with parsing API'
-    } finally {
-      isValidating.value = false
-    }
-  }, 500)
-}
+const handleUrlInput = () => validate(form.raw_url)
 
 const open = (query: Query) => {
   form.label = query.label ?? ''
   form.raw_url = query.raw_url
-  validationError.value = null
-  parsedSummary.value = null
+  reset()
   isOpen.value = true
 }
 
 const close = () => {
-  clearTimeout(debounceTimer)
+  reset()
   isOpen.value = false
 }
 

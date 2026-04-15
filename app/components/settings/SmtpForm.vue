@@ -80,18 +80,18 @@ import { ref, reactive } from 'vue'
 import { authFetch } from '~/composables/useAuthFetch'
 
 const props = defineProps<{
-  settings: Record<string, any>
+  settings: Record<string, string>
 }>()
 
 const form = reactive({
   enabled: props.settings['smtp.enabled'] === 'true',
-  host: props.settings['smtp.host'] || '',
-  port: props.settings['smtp.port'] || '',
-  username: props.settings['smtp.username'] || '',
-  password: props.settings['smtp.password'] || '',
+  host: props.settings['smtp.host'] ?? '',
+  port: props.settings['smtp.port'] ?? '',
+  username: props.settings['smtp.username'] ?? '',
+  password: props.settings['smtp.password'] ?? '',
   use_tls: props.settings['smtp.use_tls'] === 'true',
-  from: props.settings['smtp.from'] || '',
-  to: props.settings['smtp.to'] || ''
+  from: props.settings['smtp.from'] ?? '',
+  to: props.settings['smtp.to'] ?? '',
 })
 
 const saving = ref(false)
@@ -106,19 +106,17 @@ const autoSave = () => save()
 
 const save = () => {
   saving.value = true
-  setTimeout(() => {
-    emit('save', {
-      'smtp.enabled': String(form.enabled),
-      'smtp.host': form.host,
-      'smtp.port': String(form.port),
-      'smtp.username': form.username,
-      'smtp.password': form.password,
-      'smtp.use_tls': String(form.use_tls),
-      'smtp.from': form.from,
-      'smtp.to': form.to
-    })
-    saving.value = false
-  }, 500)
+  emit('save', {
+    'smtp.enabled': String(form.enabled),
+    'smtp.host': form.host,
+    'smtp.port': String(form.port),
+    'smtp.username': form.username,
+    'smtp.password': form.password,
+    'smtp.use_tls': String(form.use_tls),
+    'smtp.from': form.from,
+    'smtp.to': form.to,
+  })
+  saving.value = false
 }
 
 const testConnection = async () => {

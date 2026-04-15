@@ -8,12 +8,10 @@
 // ─────────────────────────────────────────────────────────────
 
 import { runPoll } from '../../../modules/scheduler/poll-worker';
+import { requireRouterParam } from '../../../utils/router';
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing query ID' });
-  }
+  const id = requireRouterParam(event, 'id');
 
   const result = await runPoll(id);
 

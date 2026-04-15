@@ -16,6 +16,55 @@ export interface RateLimitStatus {
   count: number;
 }
 
+interface AnalyticsRate {
+  limit?: number;
+  remaining?: number;
+  count?: number;
+  timeWindow?: number;
+}
+
+interface AnalyticsResource {
+  rates?: AnalyticsRate[];
+}
+
+interface AnalyticsRateLimitGroup {
+  apiContext?: string;
+  apiName?: string;
+  resources?: AnalyticsResource[];
+}
+
+interface AnalyticsResponse {
+  rateLimits?: AnalyticsRateLimitGroup[];
+  resources?: AnalyticsResource[];
+}
+
+const DEFAULT_DAILY_LIMIT = 5000;
+
+function extractResources(data: AnalyticsResponse | AnalyticsRateLimitGroup[]): AnalyticsResource[] {
+  if (Array.isArray(data)) {
+    const match = data.find(r => r.apiContext === 'buy' && r.apiName === 'browse');
+    return match?.resources ?? [];
+  }
+  if (Array.isArray(data.rateLimits)) {
+    const match = data.rateLimits.find(r => r.apiContext === 'buy' && r.apiName === 'browse');
+    return match?.resources ?? [];
+  }
+  if (Array.isArray(data.resources)) {
+    return data.resources;
+  }
+  return [];
+}
+
+function rateToStatus(rate: AnalyticsRate): RateLimitStatus {
+  const limit = rate.limit ?? DEFAULT_DAILY_LIMIT;
+  const remaining = rate.remaining ?? DEFAULT_DAILY_LIMIT;
+  return {
+    limit,
+    remaining,
+    count: rate.count ?? (limit - remaining),
+  };
+}
+
 export async function getAnalyticsRateLimits(
   accessToken: string,
   environment: 'production' | 'sandbox' = 'production'
@@ -38,50 +87,22 @@ export async function getAnalyticsRateLimits(
     );
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as AnalyticsResponse | AnalyticsRateLimitGroup[];
+  const resources = extractResources(data);
 
-  let resources: any[] = [];
-  if (data && Array.isArray(data.rateLimits)) {
-    const match = data.rateLimits.find((r: any) => r.apiContext === 'buy' && r.apiName === 'browse');
-    if (match && Array.isArray(match.resources)) {
-      resources = match.resources;
-    }
-  } else if (data && Array.isArray(data.resources)) {
-    resources = data.resources;
-  } else if (Array.isArray(data)) {
-    const match = data.find((r: any) => r.apiContext === 'buy' && r.apiName === 'browse');
-    if (match && Array.isArray(match.resources)) {
-      resources = match.resources;
-    }
-  }
-
-  if (!resources || resources.length === 0) {
+  if (resources.length === 0) {
     throw new EbayApiError('No rate limits returned for Browse API from Analytics API', 404);
   }
 
   for (const resource of resources) {
-    if (Array.isArray(resource.rates)) {
-      for (const rate of resource.rates) {
-        if (rate.timeWindow === 86400 || resource.rates.length === 1) {
-          return {
-            limit: rate.limit ?? 5000,
-            remaining: rate.remaining ?? 5000,
-            count: rate.count ?? ((rate.limit ?? 5000) - (rate.remaining ?? 5000)),
-          };
-        }
-      }
-    }
+    const rates = resource.rates ?? [];
+    const dailyRate = rates.find(r => r.timeWindow === 86400) ?? (rates.length === 1 ? rates[0] : undefined);
+    if (dailyRate) return rateToStatus(dailyRate);
   }
 
   for (const resource of resources) {
-    if (Array.isArray(resource.rates) && resource.rates.length > 0) {
-      const rate = resource.rates[0];
-      return {
-        limit: rate.limit ?? 5000,
-        remaining: rate.remaining ?? 5000,
-        count: rate.count ?? ((rate.limit ?? 5000) - (rate.remaining ?? 5000)),
-      };
-    }
+    const first = resource.rates?.[0];
+    if (first) return rateToStatus(first);
   }
 
   throw new EbayApiError('Malformed rates in Analytics API response', 500);

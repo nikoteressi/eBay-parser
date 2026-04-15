@@ -8,10 +8,11 @@
 // See ARCHITECTURE.md §5.1 (data lifecycle) and §6.1 (GC step).
 // ─────────────────────────────────────────────────────────────
 
-import { eq, and, lt, sql } from 'drizzle-orm';
+import { eq, and, lt } from 'drizzle-orm';
 import { db } from '../../database/index';
-import { trackedItems, settings } from '../../database/schema';
+import { trackedItems } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
+import { readNumericSetting } from '../../utils/settings';
 
 const log = createLogger('garbage-collector');
 
@@ -36,18 +37,6 @@ const DEFAULT_RETENTION_DAYS = 30;
 // ─────────────────────────────────────────────────────────────
 // Internal Helpers
 // ─────────────────────────────────────────────────────────────
-
-/**
- * Reads a numeric setting from the settings table.
- * Returns the default if the key is missing or the value is not a valid positive number.
- */
-function readNumericSetting(key: string, defaultValue: number): number {
-  const row = db.select().from(settings).where(eq(settings.key, key)).get();
-  if (!row) return defaultValue;
-
-  const parsed = Number(row.value);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : defaultValue;
-}
 
 /**
  * Returns an ISO 8601 timestamp representing `now - days`.

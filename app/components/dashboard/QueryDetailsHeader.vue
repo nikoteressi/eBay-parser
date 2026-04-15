@@ -60,8 +60,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { toRef } from 'vue'
 import StatusChip from './StatusChip.vue'
+import { useTimeAgo } from '~/composables/useTimeAgo'
 import type { Query } from '~/composables/useQueries'
 
 const props = defineProps<{
@@ -71,32 +72,7 @@ const props = defineProps<{
 
 defineEmits(['forcePoll', 'togglePause', 'edit', 'delete'])
 
-const now = ref(Date.now())
-let tickTimer: ReturnType<typeof setInterval> | null = null
-
-onMounted(() => {
-  tickTimer = setInterval(() => { now.value = Date.now() }, 30_000)
-})
-
-onUnmounted(() => {
-  if (tickTimer) clearInterval(tickTimer)
-})
-
-const timeAgo = computed(() => {
-  const polledAt = props.query.last_polled_at
-  if (!polledAt) return 'Never'
-
-  const diffMs = now.value - new Date(polledAt).getTime()
-  if (diffMs < 0) return 'Just now'
-
-  const seconds = Math.floor(diffMs / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
-})
+const timeAgo = useTimeAgo(toRef(() => props.query.last_polled_at))
 </script>
 
 <style scoped>

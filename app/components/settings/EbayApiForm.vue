@@ -59,13 +59,13 @@ import { ref, reactive } from 'vue'
 import { authFetch } from '~/composables/useAuthFetch'
 
 const props = defineProps<{
-  settings: Record<string, any>
+  settings: Record<string, string>
 }>()
 
 const form = reactive({
-  app_id: props.settings['ebay.app_id'] || '',
-  client_secret: props.settings['ebay.client_secret'] || '',
-  marketplace: props.settings['ebay.marketplace'] || 'EBAY_US'
+  app_id: props.settings['ebay.app_id'] ?? '',
+  client_secret: props.settings['ebay.client_secret'] ?? '',
+  marketplace: props.settings['ebay.marketplace'] ?? 'EBAY_US',
 })
 
 const saving = ref(false)
@@ -78,14 +78,12 @@ const emit = defineEmits<{
 
 const save = () => {
   saving.value = true
-  setTimeout(() => {
-    emit('save', {
-      'ebay.app_id': form.app_id,
-      'ebay.client_secret': form.client_secret,
-      'ebay.marketplace': form.marketplace
-    })
-    saving.value = false
-  }, 500)
+  emit('save', {
+    'ebay.app_id': form.app_id,
+    'ebay.client_secret': form.client_secret,
+    'ebay.marketplace': form.marketplace,
+  })
+  saving.value = false
 }
 
 const testConnection = async () => {

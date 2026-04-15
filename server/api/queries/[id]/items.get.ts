@@ -1,14 +1,12 @@
 import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../../../database/index';
 import { trackedItems } from '../../../database/schema';
+import { requireRouterParam } from '../../../utils/router';
 
 type TrackedItem = typeof trackedItems.$inferSelect;
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing query ID' });
-  }
+  const id = requireRouterParam(event, 'id');
 
   // Active items (base set for price-drop and new-item filters below)
   const activeItems = db

@@ -2,14 +2,12 @@ import { eq } from 'drizzle-orm';
 import { db } from '../../database/index';
 import { trackedQueries } from '../../database/schema';
 import { createLogger } from '../../utils/logger';
+import { requireRouterParam } from '../../utils/router';
 
 const log = createLogger('api:queries');
 
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, 'id');
-  if (!id) {
-    throw createError({ statusCode: 400, statusMessage: 'Missing ID' });
-  }
+  const id = requireRouterParam(event, 'id');
 
   db.delete(trackedQueries).where(eq(trackedQueries.id, id)).run();
 

@@ -34,16 +34,18 @@
               ></textarea>
             </div>
             
-            <!-- Parsed Summary Preview (Mocked for now) -->
             <div class="parsed-preview" v-if="form.raw_url">
               <h4 class="preview-title">Parsed Filters</h4>
               <div v-if="isValidating" class="text-sm text-tertiary">Analyzing URL...</div>
               <div v-else-if="validationError" class="text-sm text-error">{{ validationError }}</div>
-              <ul v-else class="preview-list">
-                <li><span class="preview-label">Keywords:</span> <span class="preview-value">"{{ mockParsed.keywords }}"</span></li>
-                <li><span class="preview-label">Price:</span> <span class="preview-value">${{ mockParsed.minPrice }} – ${{ mockParsed.maxPrice }}</span></li>
-                <li><span class="preview-label">Buy It Now:</span> <span class="preview-value">{{ mockParsed.buyItNowOnly ? 'Yes' : 'No' }}</span></li>
-                <li><span class="preview-label">Sort:</span> <span class="preview-value">{{ mockParsed.sortLabel }}</span></li>
+              <ul v-else-if="parsedSummary" class="preview-list">
+                <li><span class="preview-label">Keywords:</span> <span class="preview-value">"{{ parsedSummary.keywords }}"</span></li>
+                <li v-if="parsedSummary.minPrice != null || parsedSummary.maxPrice != null">
+                  <span class="preview-label">Price:</span>
+                  <span class="preview-value">${{ parsedSummary.minPrice ?? '—' }} – ${{ parsedSummary.maxPrice ?? '—' }}</span>
+                </li>
+                <li><span class="preview-label">Buy It Now:</span> <span class="preview-value">{{ parsedSummary.buyItNowOnly ? 'Yes' : 'No' }}</span></li>
+                <li><span class="preview-label">Sort:</span> <span class="preview-value">{{ parsedSummary.sortLabel }}</span></li>
               </ul>
             </div>
             
@@ -84,7 +86,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
-import { authFetch } from '~/composables/useAuthFetch'
+import { useUrlValidator } from '~/composables/useUrlValidator'
 
 interface AddQueryForm {
   label: string
@@ -99,60 +101,24 @@ const emit = defineEmits<{
 
 const isOpen = ref(false)
 const isSubmitting = ref(false)
-const isValidating = ref(false)
-const validationError = ref<string | null>(null)
+
+const { isValidating, validationError, parsedSummary, validate, reset } = useUrlValidator()
 
 const form = reactive({
   label: '',
   raw_url: '',
   polling_interval: '15m',
-  track_prices: true
+  track_prices: true,
 })
 
-const mockParsed = reactive({
-  keywords: 'lego castle',
-  minPrice: 50,
-  maxPrice: 300,
-  buyItNowOnly: true,
-  sortLabel: 'Newly Listed'
-})
-
-// Debounce mock
-let timeout: ReturnType<typeof setTimeout> | undefined
-const handleUrlInput = () => {
-  isValidating.value = true
-  validationError.value = null
-  clearTimeout(timeout)
-  timeout = setTimeout(async () => {
-    if (!form.raw_url.includes('ebay')) {
-      isValidating.value = false
-      validationError.value = "Invalid URL. Must be an eBay URL."
-      return
-    }
-    try {
-      const data = await authFetch<{ valid: boolean; error?: string; summary?: Record<string, unknown> }>('/api/queries/parse-url', {
-        method: 'POST',
-        body: { raw_url: form.raw_url }
-      })
-      if (!data.valid) {
-        validationError.value = data.error || "Failed to parse"
-      } else {
-        Object.assign(mockParsed, data.summary)
-      }
-    } catch (err) {
-      validationError.value = "Failed to communicate with parsing API"
-    } finally {
-      isValidating.value = false
-    }
-  }, 500)
-}
+const handleUrlInput = () => validate(form.raw_url)
 
 const open = () => {
   form.label = ''
   form.raw_url = ''
   form.polling_interval = '15m'
   form.track_prices = true
-  validationError.value = null
+  reset()
   isOpen.value = true
 }
 
@@ -163,7 +129,6 @@ const close = () => {
 const submitForm = () => {
   if (!form.raw_url || validationError.value) return
   isSubmitting.value = true
-  
   emit('submit', { ...form })
   isSubmitting.value = false
   close()

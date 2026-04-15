@@ -51,13 +51,13 @@ import { ref, reactive } from 'vue'
 import { authFetch } from '~/composables/useAuthFetch'
 
 const props = defineProps<{
-  settings: Record<string, any>
+  settings: Record<string, string>
 }>()
 
 const form = reactive({
   enabled: props.settings['telegram.enabled'] === 'true',
-  bot_token: props.settings['telegram.bot_token'] || '',
-  chat_id: props.settings['telegram.chat_id'] || ''
+  bot_token: props.settings['telegram.bot_token'] ?? '',
+  chat_id: props.settings['telegram.chat_id'] ?? '',
 })
 
 const saving = ref(false)
@@ -72,14 +72,12 @@ const autoSave = () => save()
 
 const save = () => {
   saving.value = true
-  setTimeout(() => {
-    emit('save', {
-      'telegram.enabled': String(form.enabled),
-      'telegram.bot_token': form.bot_token,
-      'telegram.chat_id': form.chat_id
-    })
-    saving.value = false
-  }, 500)
+  emit('save', {
+    'telegram.enabled': String(form.enabled),
+    'telegram.bot_token': form.bot_token,
+    'telegram.chat_id': form.chat_id,
+  })
+  saving.value = false
 }
 
 const testConnection = async () => {

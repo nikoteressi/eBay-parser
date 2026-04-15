@@ -55,9 +55,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, ref, toRef } from 'vue'
 import StatusChip from './StatusChip.vue'
 import { authFetch } from '~/composables/useAuthFetch'
+import { useTimeAgo } from '~/composables/useTimeAgo'
 import type { Query } from '~/composables/useQueries'
 
 const props = defineProps<{
@@ -71,16 +72,8 @@ const emit = defineEmits<{
 }>()
 
 const isPolling = ref(false)
-const now = ref(Date.now())
-let tickTimer: ReturnType<typeof setInterval> | null = null
 
-onMounted(() => {
-  tickTimer = setInterval(() => { now.value = Date.now() }, 30_000)
-})
-
-onUnmounted(() => {
-  if (tickTimer) clearInterval(tickTimer)
-})
+const timeAgo = useTimeAgo(toRef(() => props.query.last_polled_at), { fallback: 'Never polled' })
 
 const forcePoll = async () => {
   if (isPolling.value) return
@@ -99,36 +92,18 @@ const togglePause = () => {
   emit('update', props.query.id, { status: newStatus, is_paused: newStatus === 'paused' })
 }
 
-const confirmDelete = () => {
-  emit('delete', props.query.id)
-}
-
-const requestEdit = () => {
-  emit('edit', props.query)
-}
+const confirmDelete = () => emit('delete', props.query.id)
+const requestEdit = () => emit('edit', props.query)
 
 const summaryText = computed(() => {
   const params = props.query.parsed_params
   if (!params) return 'No filters active'
-  let text = (params.q as string | undefined) || 'All items'
-  if (typeof params.filter === 'string' && params.filter.includes('FIXED_PRICE')) text += ' (BIN)'
-  return text
-})
-
-const timeAgo = computed(() => {
-  const polledAt = props.query.last_polled_at
-  if (!polledAt) return 'Never polled'
-
-  const diffMs = now.value - new Date(polledAt).getTime()
-  if (diffMs < 0) return 'Just now'
-
-  const seconds = Math.floor(diffMs / 1000)
-  if (seconds < 60) return `${seconds}s ago`
-  const minutes = Math.floor(seconds / 60)
-  if (minutes < 60) return `${minutes}m ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 24) return `${hours}h ago`
-  return `${Math.floor(hours / 24)}d ago`
+  const keywords = typeof params.q === 'string' && params.q ? params.q : 'All items'
+  const filter = params.filter
+  const isBin = Array.isArray(filter)
+    ? filter.some(f => typeof f === 'string' && f.includes('FIXED_PRICE'))
+    : typeof filter === 'string' && filter.includes('FIXED_PRICE')
+  return isBin ? `${keywords} (BIN)` : keywords
 })
 </script>
 
