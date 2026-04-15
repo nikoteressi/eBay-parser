@@ -25,10 +25,10 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: process.env.CI ? 'node .output/server/index.mjs' : 'npm run dev',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
+    timeout: 180_000,
     env: {
       PORT: String(PORT),
       NITRO_PORT: String(PORT),
