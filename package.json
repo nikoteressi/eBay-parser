@@ -13,7 +13,8 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "test": "DATABASE_PATH=/tmp/test-db.sqlite npm run db:push && DATABASE_PATH=/tmp/test-db.sqlite vitest run"
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "better-sqlite3": "^12.8.0",
@@ -26,10 +27,12 @@
     "vue-router": "^5.0.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^8.0.0",
     "@vitest/coverage-v8": "^4.1.4",
+    "@vue/test-utils": "^2.4.6",
     "drizzle-kit": "^0.31.10",
     "vitest": "^4.1.4"
   },

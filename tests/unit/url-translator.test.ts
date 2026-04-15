@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { translateUrl, validateUrl } from './index';
+import { translateUrl, validateUrl } from '../../server/modules/url-translator/index';
 
 describe('URL Translator', () => {
   it('validates correct eBay URLs', () => {
@@ -23,7 +23,7 @@ describe('URL Translator', () => {
         'buyingOptions:{FIXED_PRICE}',
       ],
       sort: 'newlyListed',
-      limit: 50, // DEFAULT_LIMIT
+      limit: 50,
     });
 
     expect(result.summary).toEqual({
@@ -56,7 +56,6 @@ describe('URL Translator', () => {
 
     it('handles LH_PrefLoc=2 as Worldwide without API filter', () => {
       const result = translateUrl('https://www.ebay.com/sch/i.html?_nkw=lego&LH_PrefLoc=2');
-      // Should NOT contain itemLocationCountry filter
       expect(result.apiParams.filter.some(f => f.startsWith('itemLocationCountry:'))).toBe(false);
       expect(result.summary.locationLabel).toBe('Worldwide');
     });
