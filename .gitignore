@@ -31,3 +31,7 @@ data/
 
 
 .agent
+
+# Claude configuration
+CLAUDE.md
+.claudeignore

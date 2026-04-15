@@ -1,68 +1,54 @@
 # eBay Tracker & Notifier
 
-A highly efficient, full-stack Nuxt 3 application designed to monitor eBay searches for new items and monitor price drops on existing listings.
+> **Your Personal, Self-Hosted eBay Deal Hunter**
 
-## Features
-- **Concurrent Safety**: Employs SQLite WAL mode and a Global Polling Queue (max 2 concurrency) to prevent SQLite lock storms and eBay API rate-limits.
-- **Diff & Track**: Updates exist items in-place (avoiding JSON snapshot bloat) and intelligently handles "Grace Period" disappearances.
-- **Accurate Costs**: Price alerting calculates the Total Cost (Item Price + Shipping).
-- **Notifications**: Built-in Nodemailer (SMTP) and Telegram Bot support, featuring flood control and batched alerts.
-- **Encrypted Secrets**: Sensitive keys are encrypted at rest using AES-256-GCM.
+eBay Parser is a powerful, lightweight, self-hosted service designed to continuously monitor eBay listings. It automatically fetches new items matching your custom search queries and instantly notifies you of great deals, ensuring you never miss an opportunity again.
 
-## Quick Start (Development)
+## ✨ Features
 
-Requires Node.js 20+.
+- **Local SQLite Database:** A zero-dependency, lightning-fast database setup that requires no external database servers for extreme portability.
+- **Instant Notifications:** Receive immediate alerts via Telegram and Email as soon as new items matching your criteria are found.
+- **Zero-Click Diffing:** Instantly see updates without reloading the page, with sophisticated parsing to capture true listing changes and a beautiful interface.
 
-1. **Install Dependencies**
+## 🚀 Quick Start (Docker Compose)
+
+The easiest way to get eBay Parser up and running is with Docker Compose.
+
+1. **Clone the repository:**
    ```bash
-   npm install
+   git clone https://github.com/nikoteressi/ebay-parser.git
+   cd ebay-parser
    ```
 
-2. **Initialize Database**
+2. **Configure your environment:**
+   Create a `.env` file based on the example:
    ```bash
-   npm run db:generate
-   npm run db:migrate
+   cp .env-example .env
+   ```
+   
+   Open `.env` and set your secure keys. You MUST update these defaults for security:
+   ```env
+   ENCRYPTION_KEY=generate_a_secure_32_character_string
+   ADMIN_TOKEN=your_secure_admin_password
+   NUXT_PUBLIC_ADMIN_TOKEN=your_secure_admin_password
    ```
 
-3. **Run Dev Server**
+3. **Start the application:**
    ```bash
-   npm run dev
+   docker compose up -d
    ```
 
-4. **Testing**
-   ```bash
-   npm test
-   ```
+4. **Access the Web UI:**
+   Open your browser and navigate to `http://localhost:3000`.
 
-## Docker Deployment (Production)
+## 🏗️ Architecture
 
-To run the tracker robustly 24/7 without configuring node environments, use Docker:
+eBay Parser is built on a modern, decoupled architecture using **Nuxt 3** and **Vue 3** for a blazing-fast, reactive frontend, with a robust backend powered by **SQLite** and **Drizzle ORM**. The data polling service operates independently from the web server using reliable queuing and chron jobs to fetch listings from the eBay Developer Analytics API.
 
-```bash
-docker-compose up -d --build
-```
-> Note: The SQLite database file is persisted out-of-container via the `./data` volume bind-mount.
+For detailed information into how the system is structured, state management, encryption standards, and the data schema, please refer to our full architecture documentation:
 
-## Configuration Guides
+👉 **[Read the Architecture Documentation](docs/ARCHITECTURE.md)**
 
-All configuration takes place interactively in the web UI under Settings.
+---
 
-### eBay API Keys
-To connect to the eBay API, you need a developer application:
-1. Go to [developer.ebay.com](https://developer.ebay.com/).
-2. Create an account and generate a Production Keys set.
-3. Your Application must have access to the **Browse API**.
-4. Input your `Client ID` and `Client Secret` into the Tracker's Settings interface.
-
-### Telegram Setup
-To receive notifications to your phone:
-1. Message `@BotFather` on Telegram.
-2. Command `/newbot` and follow the steps.
-3. Save the **Bot Token**.
-4. To get your **Chat ID**, message your new bot, then visit `https://api.telegram.org/bot<YourBotToken>/getUpdates` to read the ID.
-5. Provide both in the Settings interface.
-
-### Email (SMTP) Setup
-1. To use Gmail, you'll need an [App Password](https://myaccount.google.com/apppasswords).
-2. Set the host to `smtp.gmail.com` and Port to `587`.
-3. Enter your email and the App Password. Wait for connection success.
+*This repository also includes detailed product specifications. See [`docs/PRODUCT_SPEC.md`](docs/PRODUCT_SPEC.md) for deeper insights.*
