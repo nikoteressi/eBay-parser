@@ -32,6 +32,7 @@ export default defineConfig({
     env: {
       PORT: String(PORT),
       NITRO_PORT: String(PORT),
+      NODE_PATH: `${process.cwd()}/node_modules`,
       DATABASE_PATH: '/tmp/test-e2e.sqlite',
       ENCRYPTION_KEY: 'playwright-test-encryption-key',
       ADMIN_TOKEN: 'playwright-test-admin-token',
